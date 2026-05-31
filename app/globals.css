@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-ocean-deep: var(--ocean-deep);
+  --color-ocean-mid: var(--ocean-mid);
+  --color-ocean-light: var(--ocean-light);
+  --color-teal: var(--brand-teal);
+  --color-teal-dim: var(--brand-teal-dim);
+  --color-sand: var(--text-primary);
+  --color-sand-muted: var(--text-muted);
+  --color-input: var(--input-bg);
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --font-display: var(--font-montserrat), system-ui, sans-serif;
+}
+
+/* Light mode (default when .dark is not on html) */
+:root {
+  color-scheme: light;
+  --ocean-deep: #f4f9f8;
+  --ocean-mid: #e3efed;
+  --ocean-light: #225750;
+  --brand-teal: #1a6b63;
+  --brand-teal-dim: #145a54;
+  --text-primary: #0f1a18;
+  --text-muted: #5a7875;
+  --input-bg: #ffffff;
+  --hero-glow: rgba(34, 87, 80, 0.12);
+  --hero-teal: rgba(34, 87, 80, 0.2);
+  --card-bg: rgba(34, 87, 80, 0.06);
+  --card-border: rgba(34, 87, 80, 0.18);
+  --btn-primary-bg: #225750;
+  --btn-primary-fg: #f4f9f8;
+  --btn-primary-hover-bg: #1a5c54;
+  --btn-primary-hover-fg: #ffffff;
+  --btn-secondary-border: rgba(34, 87, 80, 0.35);
+  --btn-secondary-hover-bg: rgba(34, 87, 80, 0.08);
+}
+
+.dark {
+  color-scheme: dark;
+  --ocean-deep: #000000;
+  --ocean-mid: #0f1a18;
+  --ocean-light: #225750;
+  --brand-teal: #98d8d8;
+  --brand-teal-dim: #7ab8b8;
+  --text-primary: #f0f7f7;
+  --text-muted: #8aa8a5;
+  --input-bg: #0a1210;
+  --hero-glow: rgba(152, 216, 216, 0.14);
+  --hero-teal: rgba(34, 87, 80, 0.35);
+  --card-bg: rgba(34, 87, 80, 0.12);
+  --card-border: rgba(152, 216, 216, 0.18);
+  --btn-primary-bg: #98d8d8;
+  --btn-primary-fg: #225750;
+  --btn-primary-hover-bg: #7ab8b8;
+  --btn-primary-hover-fg: #000000;
+  --btn-secondary-border: rgba(152, 216, 216, 0.45);
+  --btn-secondary-hover-bg: rgba(152, 216, 216, 0.08);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--ocean-deep);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.hero-gradient {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, var(--hero-glow) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 20% 30%, var(--hero-teal) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 80% 40%, var(--hero-teal) 0%, transparent 50%),
+    linear-gradient(180deg, var(--ocean-mid) 0%, var(--ocean-deep) 100%);
+}
+
+.wave-divider {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--ocean-light) 15%,
+    var(--brand-teal) 50%,
+    var(--ocean-light) 85%,
+    transparent
+  );
+  opacity: 0.7;
+}
+
+.card-surface {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(8px);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 0.5rem;
+  transition: background 0.2s, transform 0.2s, color 0.2s;
+}
+
+.btn-primary:hover {
+  background: var(--btn-primary-hover-bg);
+  color: var(--btn-primary-hover-fg);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--btn-secondary-border);
+  color: var(--brand-teal);
+  font-weight: 600;
+  border-radius: 0.5rem;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-secondary:hover {
+  background: var(--btn-secondary-hover-bg);
+  border-color: var(--brand-teal);
+}
+
+.section-heading {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--brand-teal);
+}
+
+.page-container {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .page-container {
+    padding-inline: 2rem;
+  }
+}
