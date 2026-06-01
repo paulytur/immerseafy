@@ -17,7 +17,10 @@ function ContactFormInner() {
   const searchParams = useSearchParams();
   const success = searchParams.get("success") === "true";
 
-  const formspreeId = process.env.NEXT_PUBLIC_FORMSPREE_ID;
+  const rawId = process.env.NEXT_PUBLIC_FORMSPREE_ID?.trim();
+  const formspreeId = rawId
+    ? rawId.match(/formspree\.io\/f\/([^/?]+)/)?.[1] ?? rawId
+    : undefined;
   const action = formspreeId
     ? `https://formspree.io/f/${formspreeId}`
     : undefined;

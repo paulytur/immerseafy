@@ -46,7 +46,7 @@ export default function Footer() {
               <ul className="flex gap-4">
                 <li>
                   <a
-                    href="https://instagram.com"
+                    href="https://www.instagram.com/immerseafy/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sand-muted transition-colors hover:text-teal"
@@ -57,7 +57,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <a
-                    href="https://facebook.com"
+                    href="https://www.facebook.com/profile.php?id=100093683319927"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sand-muted transition-colors hover:text-teal"

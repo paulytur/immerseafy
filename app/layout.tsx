@@ -16,13 +16,41 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://immerseafy.com";
+
+const siteDescription =
+  "Freediving training, courses, and community. Discover calm beneath the surface with Immerseafy.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Immerseafy Freediving",
     template: "%s | Immerseafy Freediving",
   },
-  description:
-    "Freediving training, courses, and community. Discover calm beneath the surface with Immerseafy.",
+  description: siteDescription,
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteUrl,
+    siteName: "Immerseafy Freediving",
+    title: "Immerseafy Freediving",
+    description: siteDescription,
+    images: [
+      {
+        url: "/og-image.png",
+        width: 512,
+        height: 512,
+        alt: "Immerseafy Freediving",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "Immerseafy Freediving",
+    description: siteDescription,
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({

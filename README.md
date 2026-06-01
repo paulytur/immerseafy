@@ -26,19 +26,30 @@ Open [http://localhost:3000](http://localhost:3000).
 
 1. Create a free form at [formspree.io](https://formspree.io).
 2. Copy your form ID (the part after `/f/` in the form endpoint URL).
-3. Copy `.env.example` to `.env.local`:
+3. Create a file named **`.env.local`** in the project root (same folder as `package.json`).  
+   **Do not** put your real ID only in `.env.example` — Next.js does not read that file.
 
-   ```bash
-   cp .env.example .env.local
-   ```
-
-4. Set your ID:
+4. Add your form ID (the part after `/f/` in your Formspree URL, not the full URL):
 
    ```
    NEXT_PUBLIC_FORMSPREE_ID=your_formspree_form_id
    ```
 
-5. Restart the dev server and submit a test message from `/contact`.
+5. **Restart** the dev server (`Ctrl+C`, then `npm run dev`). Env vars are only loaded on startup.
+
+6. Submit a test message from `/contact`.
+
+**Deployed site:** Set `NEXT_PUBLIC_FORMSPREE_ID` in your host’s environment variables (Vercel, Netlify, etc.) and **rebuild** — `NEXT_PUBLIC_*` values are baked in at build time.
+
+## Facebook / social link preview
+
+The site tells Facebook which image to use (`/og-image.png`, same as your favicon) via Open Graph tags in `app/layout.tsx`.
+
+1. Set `NEXT_PUBLIC_SITE_URL` in `.env.local` to your live domain (e.g. `https://immerseafy.com`).
+2. Rebuild and redeploy.
+3. Clear Facebook’s cache: [Sharing Debugger](https://developers.facebook.com/tools/debug/) → paste your URL → **Scrape Again**.
+
+Facebook caches previews heavily; you must scrape again after deploy for the new image to appear.
 
 After a successful submit, Formspree redirects back to `/contact?success=true` and shows a confirmation message.
 
