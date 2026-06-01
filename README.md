@@ -56,6 +56,7 @@ For GitHub Pages, you may need `basePath` / `assetPrefix` in `next.config.ts` if
 
 - **Copy & team bios** — edit `app/page.tsx`, `app/team/page.tsx`, `app/services/page.tsx`, `app/contact/page.tsx`
 - **Team photos** — replace SVG placeholders in `public/images/` with JPG/PNG and update paths in `app/team/page.tsx`
+- **Service prices** — edit `price` and `priceNote` for each service in `app/services/page.tsx`
 - **Contact details** — update email, phone, location, and social links in `app/contact/page.tsx` and `components/Footer.tsx`
 - **Colours & fonts** — adjust `app/globals.css` and fonts in `app/layout.tsx`
 

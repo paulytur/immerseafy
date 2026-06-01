@@ -8,7 +8,8 @@ const services = [
   "Practice Dive",
   "Fundive",
   "Line Training",
-  "Wave 1 & 2 Certification Courses",
+  "Wave 1 Certification Course",
+  "Wave 2 Certification Course",
   "General enquiry",
 ];
 
