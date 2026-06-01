@@ -14,7 +14,7 @@ const services = [
     duration: "2 days",
     level: "Beginner",
     price: "₱3,000",
-    priceNote: "per person",
+    priceNote: "per person · Gears · Raw Photos & Videos",
     features: [
       "Introduction to breath-hold and relaxation",
       "Safety briefing and buddy basics",
