@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 const services = [
   "Discover Freediving",
@@ -13,17 +13,47 @@ const services = [
   "General enquiry",
 ];
 
+function normalizeFormspreeId(raw: string): string {
+  const trimmed = raw.trim();
+  return trimmed.match(/formspree\.io\/f\/([^/?]+)/)?.[1] ?? trimmed;
+}
+
+function formspreeIdFromEnv(): string | undefined {
+  const raw = process.env.NEXT_PUBLIC_FORMSPREE_ID?.trim();
+  return raw ? normalizeFormspreeId(raw) : undefined;
+}
+
 function ContactFormInner() {
   const searchParams = useSearchParams();
   const success = searchParams.get("success") === "true";
 
-  const rawId = process.env.NEXT_PUBLIC_FORMSPREE_ID?.trim();
-  const formspreeId = rawId
-    ? rawId.match(/formspree\.io\/f\/([^/?]+)/)?.[1] ?? rawId
-    : undefined;
+  const [formspreeId, setFormspreeId] = useState<string | undefined>(() =>
+    formspreeIdFromEnv()
+  );
+  const [configLoaded, setConfigLoaded] = useState(
+    () => !!formspreeIdFromEnv()
+  );
+
+  useEffect(() => {
+    if (formspreeId) return;
+
+    fetch("/site-config.json")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { formspreeId?: string } | null) => {
+        if (data?.formspreeId) {
+          setFormspreeId(normalizeFormspreeId(data.formspreeId));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setConfigLoaded(true));
+  }, [formspreeId]);
+
   const action = formspreeId
     ? `https://formspree.io/f/${formspreeId}`
     : undefined;
+
+  const showDevWarning =
+    process.env.NODE_ENV === "development" && configLoaded && !formspreeId;
 
   if (success) {
     return (
@@ -44,11 +74,12 @@ function ContactFormInner() {
       method="POST"
       className="card-surface space-y-5 rounded-xl p-6 md:p-8"
     >
-      {!formspreeId && (
+      {showDevWarning && (
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          Set <code className="text-teal">NEXT_PUBLIC_FORMSPREE_ID</code> in
-          your <code className="text-teal">.env.local</code> file to enable form
-          submissions.
+          Set <code className="text-teal">NEXT_PUBLIC_FORMSPREE_ID</code> in{" "}
+          <code className="text-teal">.env.local</code> or add{" "}
+          <code className="text-teal">formspreeId</code> to{" "}
+          <code className="text-teal">public/site-config.json</code>.
         </p>
       )}
 
@@ -120,9 +151,9 @@ function ContactFormInner() {
       <button
         type="submit"
         className="btn-primary w-full"
-        disabled={!formspreeId}
+        disabled={!configLoaded || !formspreeId}
       >
-        Send message
+        {!configLoaded ? "Loading…" : "Send message"}
       </button>
     </form>
   );

@@ -81,7 +81,11 @@ export default function Footer() {
         </div>
 
         <div className="wave-divider my-8" />
-        <p className="text-center text-xs tracking-wide text-sand-muted uppercase">
+        <p className="text-center text-sm text-sand-muted">
+          Immerseafy Freediving is operated by Immerseafy Sports Equipment
+          and Accessories
+        </p>
+        <p className="mt-3 text-center text-xs tracking-wide text-sand-muted uppercase">
           &copy; {year} Immerseafy Freediving. All rights reserved.
         </p>
       </div>

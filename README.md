@@ -39,7 +39,15 @@ Open [http://localhost:3000](http://localhost:3000).
 
 6. Submit a test message from `/contact`.
 
-**Deployed site:** Set `NEXT_PUBLIC_FORMSPREE_ID` in your host’s environment variables (Vercel, Netlify, etc.) and **rebuild** — `NEXT_PUBLIC_*` values are baked in at build time.
+**Deployed site (Cloudflare, Vercel, etc.):** `.env.local` is **not uploaded** when you deploy. Use either:
+
+1. **Easiest:** Set your Formspree ID in [`public/site-config.json`](public/site-config.json) (already used in production), then redeploy.
+2. **Or:** In Cloudflare → your project → **Settings** → **Environment variables**, add:
+   - Name: `NEXT_PUBLIC_FORMSPREE_ID`
+   - Value: your form ID (e.g. `mojbzbly`)
+   - Apply to **Production** (and Preview if needed), then trigger a **new deployment**.
+
+`NEXT_PUBLIC_*` variables are embedded at **build time** on Cloudflare, so adding them in the dashboard without redeploying will not update an old build.
 
 ## Facebook / social link preview
 
