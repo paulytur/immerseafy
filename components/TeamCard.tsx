@@ -10,12 +10,16 @@ type TeamCardProps = {
 export default function TeamCard({ name, role, bio, imageSrc }: TeamCardProps) {
   return (
     <article className="card-surface overflow-hidden rounded-xl">
-      <div className="relative aspect-[4/5] bg-ocean-light">
+      <div className="relative aspect-[4/5] bg-ocean-mid/50">
         <Image
           src={imageSrc}
           alt={name}
           fill
-          className="object-cover"
+          className={
+            imageSrc.endsWith(".png")
+              ? "object-contain object-bottom p-2"
+              : "object-cover"
+          }
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
         />
       </div>

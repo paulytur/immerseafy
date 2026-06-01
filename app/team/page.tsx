@@ -12,19 +12,19 @@ const founders = [
     name: "Paul Yturzaita",
     role: "Founder · Instructor",
     bio: "Paul co-founded Immerseafy and leads training as Head Instructor with Molchanovs Wave 2 certification. He guides discover sessions, practice dives, fundives, line training, and Wave 1 & 2 courses with a focus on safety, calm technique, and helping divers progress at their own pace.",
-    imageSrc: "/images/team-1.svg",
+    imageSrc: "/images/paul-yturzaita.png",
   },
   {
     name: "Dominic Rivera",
     role: "Founder · Lead Safety Diver",
     bio: "Dominic co-founded Immerseafy and serves as Lead Safety Diver, overseeing buddy protocols, surface cover, and rescue readiness on pool and open water sessions so every diver can train with confidence.",
-    imageSrc: "/images/team-2.svg",
+    imageSrc: "/images/dominic-rivera.png",
   },
   {
     name: "J-lyn Guevarra",
     role: "Founder · Lead Safety Diver",
     bio: "J-lyn co-founded Immerseafy and works alongside the team as Lead Safety Diver, ensuring clear communication, proper safety procedures, and a supportive environment from line training to fundives.",
-    imageSrc: "/images/team-3.svg",
+    imageSrc: "/images/j-lyn-guevarra.png",
   },
 ];
 
