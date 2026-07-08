@@ -38,3 +38,13 @@ next-env.d.ts
 # local data
 .data/
 .vercel
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+
+!.env.example
