@@ -1,88 +1,80 @@
 # Immerseafy Freediving
 
-Static marketing website for Immerseafy Freediving — built with Next.js and exported as plain HTML/CSS/JS.
+Marketing site and booking system for Immerseafy Freediving — built with Next.js, Supabase, and deployed on Vercel.
 
 ## Pages
 
 - **Home** — hero, highlights, teasers
 - **Our Team** — instructor profiles
 - **Services** — courses and training offerings
+- **Book** — pick a scheduled date and request a session
 - **Contact** — Formspree form + contact details
-
-## Theme (light / dark)
-
-Use the sun/moon toggle in the navigation bar. The site defaults to **dark mode** and also respects your system preference when enabled via `next-themes`.
+- **Admin** (`/admin`) — schedule, bookings, users, QR Pay settings
 
 ## Getting started
 
 ```bash
 npm install
+cp .env.example .env.local
+# Fill in Supabase, Resend, and site URL values
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Supabase setup
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Run the migration in `supabase/migrations/001_booking_system.sql` via the SQL editor.
+3. Create storage buckets:
+   - `payment-assets` — public (QR Pay image)
+   - `invoices` — private
+4. Copy **Project URL**, **anon key**, and **service role key** into `.env.local`.
+5. Create the first admin in Supabase → Authentication → Users, with user metadata:
+   ```json
+   { "full_name": "Your Name", "role": "admin" }
+   ```
+   The trigger will create a matching `profiles` row.
+
+## Booking flow
+
+1. Admin adds dates in `/admin/schedule` (after calling the resort).
+2. Customer books at `/book` → status **pending**.
+3. Admin approves in `/admin/bookings` → payment email with QR Pay link.
+4. Customer pays via QR Ph → admin confirms payment → PDF invoice emailed.
+5. Unpaid bookings expire after 48 hours (configurable in admin settings).
+
+Customers cannot cancel from the website — admin handles cancellations.
+
+## Environment variables
+
+See `.env.example`. Required for booking:
+
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-side admin operations |
+| `NEXT_PUBLIC_SITE_URL` | Live site URL (emails, payment links) |
+| `RESEND_API_KEY` | Transactional email |
+| `RESEND_FROM_EMAIL` | Sender address |
+| `CRON_SECRET` | Secures `/api/cron/expire-bookings` on Vercel |
+
+## Deploy on Vercel
+
+1. Push to GitHub and import the repo in Vercel.
+2. Add all env vars from `.env.example`.
+3. Set `CRON_SECRET` in Vercel — the cron in `vercel.json` expires unpaid bookings hourly.
+4. Set `NEXT_PUBLIC_SITE_URL` to your production domain.
+
 ## Contact form (Formspree)
 
-1. Create a free form at [formspree.io](https://formspree.io).
-2. Copy your form ID (the part after `/f/` in the form endpoint URL).
-3. Create a file named **`.env.local`** in the project root (same folder as `package.json`).  
-   **Do not** put your real ID only in `.env.example` — Next.js does not read that file.
-
-4. Add your form ID (the part after `/f/` in your Formspree URL, not the full URL):
-
-   ```
-   NEXT_PUBLIC_FORMSPREE_ID=your_formspree_form_id
-   ```
-
-5. **Restart** the dev server (`Ctrl+C`, then `npm run dev`). Env vars are only loaded on startup.
-
-6. Submit a test message from `/contact`.
-
-**Deployed site (Cloudflare, Vercel, etc.):** `.env.local` is **not uploaded** when you deploy. Use either:
-
-1. **Easiest:** Set your Formspree ID in [`public/site-config.json`](public/site-config.json) (already used in production), then redeploy.
-2. **Or:** In Cloudflare → your project → **Settings** → **Environment variables**, add:
-   - Name: `NEXT_PUBLIC_FORMSPREE_ID`
-   - Value: your form ID (e.g. `mojbzbly`)
-   - Apply to **Production** (and Preview if needed), then trigger a **new deployment**.
-
-`NEXT_PUBLIC_*` variables are embedded at **build time** on Cloudflare, so adding them in the dashboard without redeploying will not update an old build.
-
-## Facebook / social link preview
-
-The site tells Facebook which image to use (`/og-image.png`, same as your favicon) via Open Graph tags in `app/layout.tsx`.
-
-1. Set `NEXT_PUBLIC_SITE_URL` in `.env.local` to your live domain (e.g. `https://immerseafy.com`).
-2. Rebuild and redeploy.
-3. Clear Facebook’s cache: [Sharing Debugger](https://developers.facebook.com/tools/debug/) → paste your URL → **Scrape Again**.
-
-Facebook caches previews heavily; you must scrape again after deploy for the new image to appear.
-
-After a successful submit, Formspree redirects back to `/contact?success=true` and shows a confirmation message.
-
-## Build & deploy
-
-```bash
-npm run build
-```
-
-Static files are output to the `out/` folder. Upload that folder to any static host (Netlify, Vercel, GitHub Pages, etc.).
-
-For GitHub Pages, you may need `basePath` / `assetPrefix` in `next.config.ts` if deploying to a project subdirectory.
-
-## Customising content
-
-- **Copy & team bios** — edit `app/page.tsx`, `app/team/page.tsx`, `app/services/page.tsx`, `app/contact/page.tsx`
-- **Team photos** — replace SVG placeholders in `public/images/` with JPG/PNG and update paths in `app/team/page.tsx`
-- **Service prices** — edit `price` and `priceNote` for each service in `app/services/page.tsx`
-- **Contact details** — update email, phone, location, and social links in `app/contact/page.tsx` and `components/Footer.tsx`
-- **Colours & fonts** — adjust `app/globals.css` and fonts in `app/layout.tsx`
+Still used on `/contact`. Set `NEXT_PUBLIC_FORMSPREE_ID` or use `public/site-config.json` in production.
 
 ## Scripts
 
-| Command       | Description              |
-|---------------|--------------------------|
-| `npm run dev` | Development server     |
-| `npm run build` | Static export to `out/` |
-| `npm run lint` | ESLint                  |
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint |

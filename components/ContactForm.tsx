@@ -3,13 +3,10 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { CATALOG_SERVICES } from "@/lib/services-catalog";
+
 const services = [
-  "Discover Freediving",
-  "Practice Dive",
-  "Fundive",
-  "Line Training",
-  "Wave 1 Certification Course",
-  "Wave 2 Certification Course",
+  ...CATALOG_SERVICES.map((service) => service.title),
   "General enquiry",
 ];
 
