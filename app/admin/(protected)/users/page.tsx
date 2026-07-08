@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Copy, UserPlus, Users } from "lucide-react";
+import { Copy, UserCircle, UserPlus, Users } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminEmptyState from "@/components/admin/AdminEmptyState";
 import AdminLoading from "@/components/admin/AdminLoading";
@@ -115,7 +115,11 @@ export default function AdminUsersPage() {
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<UserRole>("coach");
   const [error, setError] = useState("");
+  const [coachRosterError, setCoachRosterError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [addingCoach, setAddingCoach] = useState(false);
+  const [coachRosterName, setCoachRosterName] = useState("");
+  const [coachAddedName, setCoachAddedName] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<RevealedCredentials | null>(null);
   const [linkedCoachName, setLinkedCoachName] = useState<string | undefined>();
   const [resettingId, setResettingId] = useState<string | null>(null);
@@ -166,6 +170,33 @@ export default function AdminUsersPage() {
   useEffect(() => {
     loadAll();
   }, []);
+
+  async function handleAddCoach(e: React.FormEvent) {
+    e.preventDefault();
+    setCoachRosterError("");
+    setCoachAddedName(null);
+    setAddingCoach(true);
+
+    const name = coachRosterName.trim();
+
+    const res = await fetch("/api/admin/coaches", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+
+    const data = await res.json();
+    setAddingCoach(false);
+
+    if (!res.ok) {
+      setCoachRosterError(data.error ?? "Failed to add coach");
+      return;
+    }
+
+    setCoachRosterName("");
+    setCoachAddedName(data.coach?.name ?? name);
+    await loadCoaches();
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -294,7 +325,7 @@ export default function AdminUsersPage() {
       <AdminPageHeader
         eyebrow="Access"
         title="Users"
-        description="Create accounts with a one-time temporary password. Users set their own password on first login."
+        description="Add coaches to the roster, create logins, and link profiles for self-managed schedules."
       />
 
       {revealed && (
@@ -308,56 +339,137 @@ export default function AdminUsersPage() {
         />
       )}
 
-      <form onSubmit={handleCreate} className="admin-panel">
-        <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal/15 text-teal">
-            <UserPlus size={20} />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <form onSubmit={handleCreate} className="admin-panel">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal/15 text-teal">
+              <UserPlus size={20} />
+            </div>
+            <div>
+              <p className="font-semibold text-sand">Create account</p>
+              <p className="text-xs text-sand-muted">Login for admin, coach, or instructor</p>
+            </div>
           </div>
-          <p className="font-semibold text-sand">Create account</p>
-        </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="form-label">Full name</label>
+              <input
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="form-input"
+              />
+            </div>
+            <div>
+              <label className="form-label">Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="form-input"
+              />
+            </div>
+            <AdminSelect
+              label="Role"
+              value={role}
+              onChange={(value) => setRole(value as UserRole)}
+              options={ASSIGNABLE_ROLES.map((option) => ({
+                value: option,
+                label: roleLabel(option),
+              }))}
+            />
+          </div>
+
+          <p className="mt-4 text-sm text-sand-muted">
+            A temporary password is generated once and shown only to you here.
+            {isCoachRole(role) &&
+              " Match the roster name exactly (e.g. Paul Yturzaita) to auto-link the coach profile."}
+          </p>
+
+          <button type="submit" disabled={submitting} className="btn-primary mt-5">
+            {submitting ? "Creating account…" : "Create account"}
+          </button>
+          {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+        </form>
+
+        <form onSubmit={handleAddCoach} className="admin-panel">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal/15 text-teal">
+              <UserCircle size={20} />
+            </div>
+            <div>
+              <p className="font-semibold text-sand">Add coach</p>
+              <p className="text-xs text-sand-muted">Roster name for schedule & bookings</p>
+            </div>
+          </div>
+
           <div>
-            <label className="form-label">Full name</label>
+            <label className="form-label">Coach name</label>
             <input
               required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              value={coachRosterName}
+              onChange={(e) => setCoachRosterName(e.target.value)}
+              placeholder="e.g. Alex Santos"
               className="form-input"
             />
           </div>
-          <div>
-            <label className="form-label">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-input"
-            />
+
+          <p className="mt-4 text-sm text-sand-muted">
+            Adds them to the schedule roster. No login required unless they will
+            manage their own dates — then create an account and link the profile
+            below.
+          </p>
+
+          {coachAddedName ? (
+            <p className="mt-4 rounded-lg border border-teal/20 bg-teal/5 px-3 py-2 text-sm text-sand">
+              <strong className="text-teal">{coachAddedName}</strong> added to
+              the roster. They now appear in Schedule.
+            </p>
+          ) : null}
+
+          <button
+            type="submit"
+            disabled={addingCoach}
+            className="btn-primary mt-5"
+          >
+            {addingCoach ? "Adding coach…" : "Add coach"}
+          </button>
+          {coachRosterError && (
+            <p className="mt-3 text-sm text-red-400">{coachRosterError}</p>
+          )}
+        </form>
+      </div>
+
+      {!loading && coaches.length > 0 ? (
+        <div className="admin-panel">
+          <p className="text-sm font-semibold text-sand">Coach roster</p>
+          <p className="mt-1 text-xs text-sand-muted">
+            {coaches.length} on schedule
+            {" · "}
+            {coaches.filter((coach) => !coach.profile_id).length} without login
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {coaches.map((coach) => (
+              <span key={coach.id} className="admin-coach-chip" title={coach.name}>
+                <span className="admin-coach-chip-initials">
+                  {coach.name
+                    .split(" ")
+                    .map((part) => part[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase()}
+                </span>
+                <span className="admin-coach-chip-name">{coach.name}</span>
+                {!coach.profile_id ? (
+                  <span className="text-[0.625rem] text-sand-muted">· no login</span>
+                ) : null}
+              </span>
+            ))}
           </div>
-          <AdminSelect
-            label="Role"
-            value={role}
-            onChange={(value) => setRole(value as UserRole)}
-            options={ASSIGNABLE_ROLES.map((option) => ({
-              value: option,
-              label: roleLabel(option),
-            }))}
-          />
         </div>
-
-        <p className="text-sm text-sand-muted">
-          A temporary password is generated once and shown only to you here.
-          {isCoachRole(role) &&
-            " Match the roster name exactly (e.g. Paul Yturzaita) to auto-link the coach profile."}
-        </p>
-
-        <button type="submit" disabled={submitting} className="btn-primary mt-5">
-          {submitting ? "Creating account…" : "Create account"}
-        </button>
-        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
-      </form>
+      ) : null}
 
       <section className="space-y-5">
         <div className="flex flex-wrap items-end justify-between gap-3">

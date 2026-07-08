@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, Sparkles } from "lucide-react";
 import { addDays } from "@/lib/booking-items";
 import { formatBookingDates } from "@/lib/schedule-utils";
 
@@ -12,6 +12,8 @@ type DatePickerGridProps = {
   onSelect: (date: string) => void;
 };
 
+const INITIAL_MONTH_ROWS = 6;
+
 function monthKey(dateStr: string) {
   const date = new Date(`${dateStr}T12:00:00`);
   return `${date.getFullYear()}-${date.getMonth()}`;
@@ -21,6 +23,12 @@ function monthLabel(dateStr: string) {
   return new Date(`${dateStr}T12:00:00`).toLocaleDateString("en-PH", {
     month: "long",
     year: "numeric",
+  });
+}
+
+function monthShortLabel(dateStr: string) {
+  return new Date(`${dateStr}T12:00:00`).toLocaleDateString("en-PH", {
+    month: "short",
   });
 }
 
@@ -121,24 +129,47 @@ export default function DatePickerGrid({
       .map(([key, monthDates]) => ({
         key,
         label: monthLabel(monthDates[0]),
+        shortLabel: monthShortLabel(monthDates[0]),
         dates: monthDates,
       }));
   }, [dates]);
 
-  const [expanded, setExpanded] = useState<Set<string>>(() => {
-    const initial = new Set<string>();
-    for (const date of dates) initial.add(monthKey(date));
-    if (selectedDate) initial.add(monthKey(selectedDate));
-    return initial;
-  });
+  const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
+  const [monthLimits, setMonthLimits] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    setMonthLimits({});
+
+    if (groups.length === 0) {
+      setExpandedMonth(null);
+      return;
+    }
+
+    const selectedMonth = selectedDate ? monthKey(selectedDate) : null;
+    const hasSelectedMonth = selectedMonth
+      ? groups.some((group) => group.key === selectedMonth)
+      : false;
+
+    setExpandedMonth(hasSelectedMonth ? selectedMonth : groups[0].key);
+  }, [dates, durationDays, groups, selectedDate]);
+
+  function handleSelect(date: string) {
+    setExpandedMonth(monthKey(date));
+    onSelect(date);
+  }
 
   function toggleMonth(key: string) {
-    setExpanded((current) => {
-      const next = new Set(current);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+    setExpandedMonth((current) => (current === key ? null : key));
+  }
+
+  function showMoreInMonth(key: string, total: number) {
+    setMonthLimits((prev) => ({
+      ...prev,
+      [key]: Math.min(
+        (prev[key] ?? INITIAL_MONTH_ROWS) + INITIAL_MONTH_ROWS,
+        total
+      ),
+    }));
   }
 
   if (dates.length === 0) {
@@ -151,62 +182,132 @@ export default function DatePickerGrid({
     );
   }
 
+  const soonestDate = dates[0];
+
   return (
-    <div
-      role="radiogroup"
-      aria-label={
-        durationDays === 2
-          ? "Available consecutive date pairs"
-          : "Available dates"
-      }
-      className="booking-date-list"
-    >
-      {groups.map((group) => {
-        const isOpen = expanded.has(group.key);
+    <div className="booking-date-picker">
+      <div className="booking-date-picker-meta">
+        <p className="text-xs text-sand-muted">
+          {dates.length} available date{dates.length === 1 ? "" : "s"} across{" "}
+          {groups.length} month{groups.length === 1 ? "" : "s"}
+        </p>
 
-        return (
-          <section key={group.key} className="booking-date-month">
+        {!selectedDate && soonestDate ? (
+          <button
+            type="button"
+            onClick={() => handleSelect(soonestDate)}
+            className="booking-date-soonest"
+          >
+            <Sparkles size={13} />
+            Pick soonest · {formatBookingDates(soonestDate, durationDays)}
+          </button>
+        ) : null}
+      </div>
+
+      {groups.length > 1 ? (
+        <div
+          className="booking-date-month-jumps"
+          role="tablist"
+          aria-label="Jump to month"
+        >
+          {groups.map((group) => (
             <button
+              key={group.key}
               type="button"
-              onClick={() => toggleMonth(group.key)}
-              className="booking-date-month-header"
-              aria-expanded={isOpen}
+              role="tab"
+              aria-selected={expandedMonth === group.key}
+              onClick={() => setExpandedMonth(group.key)}
+              className="booking-date-month-jump"
+              data-active={expandedMonth === group.key}
             >
-              <div className="text-left">
-                <p className="text-sm font-semibold text-sand">{group.label}</p>
-                <p className="text-xs text-sand-muted">
-                  {group.dates.length} slot{group.dates.length === 1 ? "" : "s"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="booking-pill text-[0.6875rem]">
-                  {group.dates.length}
-                </span>
-                <ChevronDown
-                  size={15}
-                  className={`text-teal transition-transform ${
-                    isOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </div>
+              {group.shortLabel}
+              <span className="booking-date-month-jump-count">
+                {group.dates.length}
+              </span>
             </button>
+          ))}
+        </div>
+      ) : null}
 
-            {isOpen && (
-              <div className="booking-date-grid border-t border-teal/10 p-2">
-                {group.dates.map((date) => (
-                  <DateCard
-                    key={date}
-                    date={date}
-                    durationDays={durationDays}
-                    selected={selectedDate === date}
-                    onSelect={onSelect}
+      <div
+        role="radiogroup"
+        aria-label={
+          durationDays === 2
+            ? "Available consecutive date pairs"
+            : "Available dates"
+        }
+        className="booking-date-list"
+      >
+        {groups.map((group) => {
+          const isOpen = expandedMonth === group.key;
+          const visibleLimit = monthLimits[group.key] ?? INITIAL_MONTH_ROWS;
+          const visibleDates = group.dates.slice(0, visibleLimit);
+          const hiddenCount = group.dates.length - visibleDates.length;
+
+          return (
+            <section key={group.key} className="booking-date-month">
+              <button
+                type="button"
+                onClick={() => toggleMonth(group.key)}
+                className="booking-date-month-header"
+                aria-expanded={isOpen}
+              >
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-sand">{group.label}</p>
+                  <p className="text-xs text-sand-muted">
+                    {group.dates.length} slot
+                    {group.dates.length === 1 ? "" : "s"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedDate && monthKey(selectedDate) === group.key ? (
+                    <span className="booking-date-month-selected-pill">
+                      Selected
+                    </span>
+                  ) : null}
+                  <ChevronDown
+                    size={15}
+                    className={`text-teal transition-transform ${
+                      isOpen ? "rotate-180" : ""
+                    }`}
                   />
-                ))}
-              </div>
-            )}
-          </section>
-        );
-      })}
+                </div>
+              </button>
+
+              {isOpen && (
+                <>
+                  <div className="booking-date-grid border-t border-teal/10">
+                    {visibleDates.map((date) => (
+                      <DateCard
+                        key={date}
+                        date={date}
+                        durationDays={durationDays}
+                        selected={selectedDate === date}
+                        onSelect={handleSelect}
+                      />
+                    ))}
+                  </div>
+
+                  {hiddenCount > 0 ? (
+                    <div className="booking-date-show-more-wrap">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          showMoreInMonth(group.key, group.dates.length)
+                        }
+                        className="booking-date-show-more"
+                      >
+                        Show {Math.min(hiddenCount, INITIAL_MONTH_ROWS)} more in{" "}
+                        {group.shortLabel}
+                      </button>
+                    </div>
+                  ) : null}
+                </>
+              )}
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
 }

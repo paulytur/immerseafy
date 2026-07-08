@@ -48,6 +48,44 @@ export function groupAvailabilityByTwoDayPeriod(
   return periods.sort((a, b) => a.startDate.localeCompare(b.startDate));
 }
 
+export function todayIsoDate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function daysFromScheduleDate(
+  dateStr: string,
+  today = todayIsoDate()
+): number {
+  const todayDate = new Date(`${today}T12:00:00`);
+  const date = new Date(`${dateStr}T12:00:00`);
+  return Math.round((date.getTime() - todayDate.getTime()) / 86_400_000);
+}
+
+export function isUpcomingPeriod(
+  period: CoachTwoDayPeriod,
+  today = todayIsoDate()
+): boolean {
+  return period.endDate >= today;
+}
+
+/** Upcoming dates first (soonest at top), then past dates (most recent past first). */
+export function comparePeriodsByNearestDate(
+  a: CoachTwoDayPeriod,
+  b: CoachTwoDayPeriod,
+  today = todayIsoDate()
+): number {
+  const daysA = daysFromScheduleDate(a.startDate, today);
+  const daysB = daysFromScheduleDate(b.startDate, today);
+  const aUpcoming = daysA >= 0;
+  const bUpcoming = daysB >= 0;
+
+  if (aUpcoming && !bUpcoming) return -1;
+  if (!aUpcoming && bUpcoming) return 1;
+  if (aUpcoming && bUpcoming) return daysA - daysB;
+
+  return daysB - daysA;
+}
+
 /** Earliest upcoming date from schedule blocks and/or booking start dates. */
 export function findNearestUpcomingDate(
   periods: CoachTwoDayPeriod[],

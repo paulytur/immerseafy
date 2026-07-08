@@ -26,3 +26,13 @@ export const COACHES_SEED = [
   { name: "Zed Tanjista", slug: "zed-tanjista" },
   { name: "Lance Dusaban", slug: "lance-dusaban" },
 ] as const;
+
+export function coachSlugFromName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}

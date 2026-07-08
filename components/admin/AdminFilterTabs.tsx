@@ -1,24 +1,36 @@
 type AdminFilterTabsProps = {
   tabs: { value: string; label: string; href: string; count?: number }[];
   active: string;
+  /** Render inside a shared filter panel without an extra outer frame. */
+  embedded?: boolean;
 };
 
-export default function AdminFilterTabs({ tabs, active }: AdminFilterTabsProps) {
+export default function AdminFilterTabs({
+  tabs,
+  active,
+  embedded = false,
+}: AdminFilterTabsProps) {
+  const tabList = tabs.map((tab) => (
+    <a
+      key={tab.value}
+      href={tab.href}
+      data-active={active === tab.value}
+      className="admin-filter-tab inline-flex items-center gap-2"
+    >
+      {tab.label}
+      {tab.count != null && tab.count > 0 ? (
+        <span className="admin-filter-tab-count">{tab.count}</span>
+      ) : null}
+    </a>
+  ));
+
+  if (embedded) {
+    return <div className="admin-filter-panel-tab-list">{tabList}</div>;
+  }
+
   return (
     <div className="flex flex-wrap gap-2 rounded-xl border border-teal/15 bg-ocean-mid/30 p-1.5">
-      {tabs.map((tab) => (
-        <a
-          key={tab.value}
-          href={tab.href}
-          data-active={active === tab.value}
-          className="admin-filter-tab inline-flex items-center gap-2"
-        >
-          {tab.label}
-          {tab.count != null && tab.count > 0 ? (
-            <span className="admin-filter-tab-count">{tab.count}</span>
-          ) : null}
-        </a>
-      ))}
+      {tabList}
     </div>
   );
 }

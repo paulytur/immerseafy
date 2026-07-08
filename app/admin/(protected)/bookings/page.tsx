@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { ClipboardList, Search } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminFilterTabs from "@/components/admin/AdminFilterTabs";
 import AdminEmptyState from "@/components/admin/AdminEmptyState";
 import AdminLoading from "@/components/admin/AdminLoading";
+import AdminSearch from "@/components/admin/AdminSearch";
 import BookingsList from "@/components/admin/BookingsList";
 import type { BookingStatus, BookingWithSlot } from "@/lib/types";
 
@@ -144,18 +145,23 @@ function BookingsContent() {
         description="Review, approve, and confirm payments."
       />
 
-      <div className="admin-bookings-toolbar admin-bookings-toolbar-sticky">
-        <AdminFilterTabs tabs={filters} active={statusFilter} />
-        <label className="admin-bookings-search">
-          <Search size={15} className="shrink-0 text-sand-muted" />
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search…"
-            className="admin-bookings-search-input"
+      <div className="admin-filter-panel admin-filter-panel-sticky">
+        <div className="admin-filter-panel-tabs">
+          <AdminFilterTabs
+            tabs={filters}
+            active={statusFilter}
+            embedded
           />
-        </label>
+        </div>
+
+        <div className="admin-filter-panel-fields admin-filter-panel-fields-single">
+          <AdminSearch
+            label="Search"
+            value={search}
+            onChange={setSearch}
+            placeholder="Name, email, phone, or reference"
+          />
+        </div>
       </div>
 
       {actionMessage ? (

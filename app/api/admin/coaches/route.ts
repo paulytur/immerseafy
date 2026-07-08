@@ -1,8 +1,30 @@
 import { NextResponse } from "next/server";
 import { fetchCoaches } from "@/lib/coach-availability";
 import { setCoachProfileLink } from "@/lib/coach-links";
+import { coachSlugFromName } from "@/lib/coaches";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdminProfile } from "@/lib/supabase/auth";
+
+async function uniqueCoachSlug(
+  supabase: ReturnType<typeof createAdminClient>,
+  baseSlug: string
+) {
+  let slug = baseSlug;
+  let suffix = 2;
+
+  while (true) {
+    const { data } = await supabase
+      .from("coaches")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (!data) return slug;
+
+    slug = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+}
 
 export async function GET() {
   try {
@@ -35,6 +57,47 @@ export async function GET() {
           : null,
       })),
     });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Error";
+    return NextResponse.json(
+      { error: message },
+      { status: message === "Forbidden" ? 403 : 401 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    await requireAdminProfile();
+    const body = await request.json();
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+
+    if (!name) {
+      return NextResponse.json({ error: "Coach name is required" }, { status: 400 });
+    }
+
+    const baseSlug = coachSlugFromName(name);
+    if (!baseSlug) {
+      return NextResponse.json(
+        { error: "Name must include at least one letter or number" },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createAdminClient();
+    const slug = await uniqueCoachSlug(supabase, baseSlug);
+
+    const { data: coach, error } = await supabase
+      .from("coaches")
+      .insert({ name, slug, active: true })
+      .select("*")
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ coach });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error";
     return NextResponse.json(

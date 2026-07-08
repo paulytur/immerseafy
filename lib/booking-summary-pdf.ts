@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { BreakdownLine } from "@/lib/booking-breakdown";
 import { formatPriceForPdf, sanitizePdfText } from "@/lib/pdf-text";
+import { BOOKING_STATUS_LABELS } from "@/lib/references";
 import type { BookingStatus } from "@/lib/types";
 
 export type BookingSummaryPdfData = {
@@ -18,10 +19,10 @@ export type BookingSummaryPdfData = {
 
 const STATUS_LABELS: Record<BookingStatus, string> = {
   pending: "Request received — pending review",
-  awaiting_payment: "Awaiting payment",
-  confirmed: "Confirmed",
-  cancelled: "Cancelled",
-  expired: "Expired",
+  awaiting_payment: BOOKING_STATUS_LABELS.awaiting_payment,
+  confirmed: BOOKING_STATUS_LABELS.confirmed,
+  cancelled: BOOKING_STATUS_LABELS.cancelled,
+  expired: BOOKING_STATUS_LABELS.expired,
 };
 
 function truncate(text: string, max = 72): string {

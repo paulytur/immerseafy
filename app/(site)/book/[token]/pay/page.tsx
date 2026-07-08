@@ -5,6 +5,7 @@ import { Clock, QrCode } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatPrice } from "@/lib/services-catalog";
 import { getBookingEmailContext } from "@/lib/booking-items";
+import { BOOKING_STATUS_LABELS } from "@/lib/references";
 import BookingSummaryDownload from "@/components/booking/BookingSummaryDownload";
 
 export const metadata: Metadata = {
@@ -50,7 +51,7 @@ export default async function PaymentPage({
       <div className="page-container max-w-md">
         <div className="card-surface overflow-hidden rounded-2xl">
           <div className="border-b border-teal/10 px-6 py-8 text-center">
-            <p className="eyebrow">Awaiting payment</p>
+            <p className="eyebrow">{BOOKING_STATUS_LABELS.awaiting_payment}</p>
             <h1 className="mt-2 font-display text-2xl font-semibold text-sand">
               Complete your booking
             </h1>

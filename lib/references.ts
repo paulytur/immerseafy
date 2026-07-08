@@ -28,6 +28,18 @@ export const ACTIVE_BOOKING_STATUSES: BookingStatus[] = [
   "confirmed",
 ];
 
+export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
+  pending: "Pending",
+  awaiting_payment: "Awaiting",
+  confirmed: "Confirmed",
+  expired: "Expired",
+  cancelled: "Cancelled",
+};
+
+export function bookingStatusLabel(status: BookingStatus): string {
+  return BOOKING_STATUS_LABELS[status];
+}
+
 export function siteUrl(): string {
   return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 }

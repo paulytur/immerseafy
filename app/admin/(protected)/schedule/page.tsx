@@ -2,14 +2,22 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { addDays } from "@/lib/dates";
-import { formatBookingDates, groupAvailabilityByTwoDayPeriod } from "@/lib/schedule-utils";
+import {
+  formatBookingDates,
+  groupAvailabilityByTwoDayPeriod,
+  isUpcomingPeriod,
+  todayIsoDate,
+} from "@/lib/schedule-utils";
 import { CalendarDays, UserCheck, Users } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminEmptyState from "@/components/admin/AdminEmptyState";
 import AdminLoading from "@/components/admin/AdminLoading";
 import AdminSelect from "@/components/admin/AdminSelect";
 import AdminDatePicker from "@/components/admin/AdminDatePicker";
-import ScheduleAvailabilityList from "@/components/admin/ScheduleAvailabilityList";
+import AdminSearch from "@/components/admin/AdminSearch";
+import ScheduleAvailabilityList, {
+  type ScheduleView,
+} from "@/components/admin/ScheduleAvailabilityList";
 import type { Coach, CoachDay } from "@/lib/coaches";
 
 export default function AdminSchedulePage() {
@@ -24,11 +32,33 @@ export default function AdminSchedulePage() {
   const [sessionDate, setSessionDate] = useState("");
   const [selectedCoachId, setSelectedCoachId] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [view, setView] = useState<ScheduleView>("upcoming");
+  const [listCoachFilter, setListCoachFilter] = useState("");
 
   const periods = useMemo(
     () => groupAvailabilityByTwoDayPeriod(days),
     [days]
   );
+
+  const today = todayIsoDate();
+
+  const viewCounts = useMemo(() => {
+    const counts = { upcoming: 0, past: 0, all: periods.length };
+
+    for (const period of periods) {
+      if (isUpcomingPeriod(period, today)) counts.upcoming += 1;
+      else counts.past += 1;
+    }
+
+    return counts;
+  }, [periods, today]);
+
+  const viewTabs: { value: ScheduleView; label: string; count: number }[] = [
+    { value: "upcoming", label: "Upcoming", count: viewCounts.upcoming },
+    { value: "past", label: "Past", count: viewCounts.past },
+    { value: "all", label: "All", count: viewCounts.all },
+  ];
 
   async function loadSchedule() {
     const res = await fetch("/api/admin/coach-availability");
@@ -204,10 +234,58 @@ export default function AdminSchedulePage() {
             </div>
             {!loading && periods.length > 0 && (
               <span className="booking-pill">
-                {periods.length} block{periods.length === 1 ? "" : "s"}
+                {viewCounts.upcoming} upcoming
               </span>
             )}
           </div>
+
+          {!loading && periods.length > 0 && (
+            <div className="admin-filter-panel">
+              <div className="admin-filter-panel-tabs">
+                {viewTabs.map((tab) => (
+                  <button
+                    key={tab.value}
+                    type="button"
+                    data-active={view === tab.value}
+                    onClick={() => setView(tab.value)}
+                    className="admin-filter-tab inline-flex items-center gap-2"
+                  >
+                    {tab.label}
+                    {tab.count > 0 ? (
+                      <span className="admin-filter-tab-count">{tab.count}</span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+
+              <div
+                className={`admin-filter-panel-fields${isAdmin && coaches.length > 0 ? "" : " admin-filter-panel-fields-single"}`}
+              >
+                {isAdmin && coaches.length > 0 && (
+                  <AdminSelect
+                    label="Coach"
+                    value={listCoachFilter}
+                    onChange={setListCoachFilter}
+                    placeholder="All coaches"
+                    options={[
+                      { value: "", label: "All coaches" },
+                      ...coaches.map((coach) => ({
+                        value: coach.id,
+                        label: coach.name,
+                      })),
+                    ]}
+                  />
+                )}
+
+                <AdminSearch
+                  label="Search"
+                  value={search}
+                  onChange={setSearch}
+                  placeholder="Date or coach name"
+                />
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <AdminLoading label="Loading schedule…" />
@@ -224,6 +302,9 @@ export default function AdminSchedulePage() {
               myCoach={myCoach}
               acting={acting}
               onRemove={handleRemove}
+              search={search}
+              view={view}
+              coachFilterId={listCoachFilter}
             />
           )}
         </div>
