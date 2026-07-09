@@ -8,10 +8,20 @@ const styles: Record<UserRole, string> = {
   staff: "bg-slate-500/15 text-slate-300 border-slate-500/25",
 };
 
-export default function RoleBadge({ role }: { role: UserRole }) {
+export default function RoleBadge({
+  role,
+  compact = false,
+}: {
+  role: UserRole;
+  compact?: boolean;
+}) {
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide ${styles[role]}`}
+      className={`inline-flex max-w-full items-center rounded-full border font-semibold ${
+        compact
+          ? "px-2 py-0.5 text-[0.6875rem] tracking-normal"
+          : "px-2.5 py-0.5 text-xs uppercase tracking-wide"
+      } ${styles[role]}`}
     >
       {roleLabel(role)}
     </span>

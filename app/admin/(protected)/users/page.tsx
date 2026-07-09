@@ -7,6 +7,7 @@ import AdminEmptyState from "@/components/admin/AdminEmptyState";
 import AdminLoading from "@/components/admin/AdminLoading";
 import AdminSelect from "@/components/admin/AdminSelect";
 import TeamAccountsList from "@/components/admin/TeamAccountsList";
+import CoachRosterPanel from "@/components/admin/CoachRosterPanel";
 import { roleLabel } from "@/lib/roles";
 import type { Coach } from "@/lib/coaches";
 import type { Profile, UserRole } from "@/lib/types";
@@ -65,11 +66,9 @@ function CredentialReveal({
         person. This password is shown once and is not stored in plain text.
       </p>
 
-      <div className="mt-4 space-y-3 rounded-xl border border-teal/15 bg-ocean-mid/30 p-4">
+      <div className="mt-4 space-y-3">
         <div>
-          <p className="text-xs uppercase tracking-wide text-sand-muted">
-            Email
-          </p>
+          <p className="text-xs uppercase tracking-wide text-sand-muted">Email</p>
           <p className="mt-1 font-medium text-sand">{credentials.email}</p>
         </div>
         <div>
@@ -77,7 +76,7 @@ function CredentialReveal({
             Temporary password
           </p>
           <div className="mt-1 flex items-center gap-2">
-            <code className="flex-1 rounded-lg bg-ocean-deep px-3 py-2 font-mono text-sm text-teal">
+            <code className="flex-1 rounded-lg border border-teal/15 bg-ocean-deep/60 px-3 py-2 font-mono text-sm text-teal">
               {credentials.temporaryPassword}
             </code>
             <button
@@ -423,9 +422,9 @@ export default function AdminUsersPage() {
           </p>
 
           {coachAddedName ? (
-            <p className="mt-4 rounded-lg border border-teal/20 bg-teal/5 px-3 py-2 text-sm text-sand">
-              <strong className="text-teal">{coachAddedName}</strong> added to
-              the roster. They now appear in Schedule.
+            <p className="mt-4 text-sm text-sand">
+              <strong className="text-teal">{coachAddedName}</strong> added to the
+              roster. They now appear in Schedule.
             </p>
           ) : null}
 
@@ -439,37 +438,10 @@ export default function AdminUsersPage() {
           {coachRosterError && (
             <p className="mt-3 text-sm text-red-400">{coachRosterError}</p>
           )}
+
+          <CoachRosterPanel coaches={coaches} expandSignal={coachAddedName} />
         </form>
       </div>
-
-      {!loading && coaches.length > 0 ? (
-        <div className="admin-panel">
-          <p className="text-sm font-semibold text-sand">Coach roster</p>
-          <p className="mt-1 text-xs text-sand-muted">
-            {coaches.length} on schedule
-            {" · "}
-            {coaches.filter((coach) => !coach.profile_id).length} without login
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {coaches.map((coach) => (
-              <span key={coach.id} className="admin-coach-chip" title={coach.name}>
-                <span className="admin-coach-chip-initials">
-                  {coach.name
-                    .split(" ")
-                    .map((part) => part[0])
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase()}
-                </span>
-                <span className="admin-coach-chip-name">{coach.name}</span>
-                {!coach.profile_id ? (
-                  <span className="text-[0.625rem] text-sand-muted">· no login</span>
-                ) : null}
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : null}
 
       <section className="space-y-5">
         <div className="flex flex-wrap items-end justify-between gap-3">

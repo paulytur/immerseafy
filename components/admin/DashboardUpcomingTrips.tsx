@@ -51,7 +51,12 @@ function TripCard({
             </span>
           ) : null}
           {trip.needsCoaches ? (
-            <span className="admin-dashboard-trip-warning">No coaches</span>
+            <Link
+              href="/admin/schedule"
+              className="admin-dashboard-trip-warning hover:underline"
+            >
+              No coaches
+            </Link>
           ) : null}
         </div>
       </div>
@@ -115,7 +120,10 @@ function TripCard({
         <ul className="admin-dashboard-trip-bookings">
           {trip.bookings.slice(0, featured ? 5 : 3).map((booking) => (
             <li key={booking.id} className="admin-dashboard-trip-booking">
-              <div className="min-w-0 flex-1">
+              <Link
+                href="/admin/bookings"
+                className="min-w-0 flex-1 transition-colors hover:text-teal"
+              >
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="truncate text-sm font-medium text-sand">
                     {booking.customerName}
@@ -138,7 +146,7 @@ function TripCard({
                 <p className="mt-0.5 font-mono text-[0.65rem] text-teal/70">
                   {booking.reference}
                 </p>
-              </div>
+              </Link>
               <span className="admin-dashboard-booking-pax">
                 {booking.headcount} pax
               </span>
@@ -203,10 +211,10 @@ export default function DashboardUpcomingTrips({
           </p>
         </div>
         <Link
-          href="/admin/schedule"
+          href="/admin/bookings"
           className="text-sm font-medium text-teal hover:underline"
         >
-          Manage schedule →
+          View bookings →
         </Link>
       </div>
 

@@ -96,7 +96,7 @@ export default function AdminSettingsPage() {
           </p>
 
           {qrUrl && (
-            <div className="mt-5 flex justify-center rounded-xl bg-white p-5 shadow-inner">
+            <div className="mt-5 flex justify-center rounded-lg border border-card-border bg-white p-4">
               <Image
                 src={qrUrl}
                 alt="QR Pay"

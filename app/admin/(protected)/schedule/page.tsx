@@ -240,7 +240,30 @@ export default function AdminSchedulePage() {
           </div>
 
           {!loading && periods.length > 0 && (
-            <div className="admin-filter-panel">
+            <div className="admin-bookings-filters admin-bookings-filters-sticky">
+              <AdminSearch
+                label="Search"
+                value={search}
+                onChange={setSearch}
+                placeholder="Date or coach name"
+              />
+
+              {isAdmin && coaches.length > 0 && (
+                <AdminSelect
+                  label="Coach"
+                  value={listCoachFilter}
+                  onChange={setListCoachFilter}
+                  placeholder="All coaches"
+                  options={[
+                    { value: "", label: "All coaches" },
+                    ...coaches.map((coach) => ({
+                      value: coach.id,
+                      label: coach.name,
+                    })),
+                  ]}
+                />
+              )}
+
               <div className="admin-filter-panel-tabs">
                 {viewTabs.map((tab) => (
                   <button
@@ -256,33 +279,6 @@ export default function AdminSchedulePage() {
                     ) : null}
                   </button>
                 ))}
-              </div>
-
-              <div
-                className={`admin-filter-panel-fields${isAdmin && coaches.length > 0 ? "" : " admin-filter-panel-fields-single"}`}
-              >
-                {isAdmin && coaches.length > 0 && (
-                  <AdminSelect
-                    label="Coach"
-                    value={listCoachFilter}
-                    onChange={setListCoachFilter}
-                    placeholder="All coaches"
-                    options={[
-                      { value: "", label: "All coaches" },
-                      ...coaches.map((coach) => ({
-                        value: coach.id,
-                        label: coach.name,
-                      })),
-                    ]}
-                  />
-                )}
-
-                <AdminSearch
-                  label="Search"
-                  value={search}
-                  onChange={setSearch}
-                  placeholder="Date or coach name"
-                />
               </div>
             </div>
           )}

@@ -116,7 +116,7 @@ export default function AdminShell({
         </div>
       </aside>
 
-      <main className="min-h-0 flex-1 overflow-y-auto">
+      <main className="admin-app min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl p-6 md:p-10">{children}</div>
       </main>
     </div>

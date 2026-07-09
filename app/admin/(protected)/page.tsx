@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
-  ArrowRight,
   Calendar,
   CheckCircle2,
   Clock,
@@ -101,24 +99,6 @@ export default async function AdminDashboardPage() {
     },
   ];
 
-  const quickLinks = [
-    {
-      href: "/admin/bookings?status=pending",
-      label: "Review pending bookings",
-      description: "Approve requests and send payment links",
-    },
-    {
-      href: "/admin/schedule",
-      label: "Update coach schedule",
-      description: "Mark who is available to teach",
-    },
-    {
-      href: "/admin/bookings?status=awaiting_payment",
-      label: "Confirm payments",
-      description: "Mark paid bookings and send invoices",
-    },
-  ];
-
   return (
     <div className="admin-dashboard space-y-8">
       <AdminPageHeader
@@ -138,32 +118,6 @@ export default async function AdminDashboardPage() {
       <DashboardUpcomingTrips trips={trips} />
 
       <DashboardPaymentDeadlines deadlines={paymentDeadlines} />
-
-      <section>
-        <h2 className="font-display text-lg font-semibold text-sand">
-          Quick actions
-        </h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          {quickLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="admin-panel group flex flex-col transition-colors hover:border-teal/35"
-            >
-              <p className="font-medium text-sand group-hover:text-teal">
-                {link.label}
-              </p>
-              <p className="mt-1 flex-1 text-sm text-sand-muted">
-                {link.description}
-              </p>
-              <ArrowRight
-                size={16}
-                className="mt-4 text-teal opacity-0 transition-opacity group-hover:opacity-100"
-              />
-            </Link>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

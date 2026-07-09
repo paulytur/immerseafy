@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import AdminEmptyState from "@/components/admin/AdminEmptyState";
 import StatusBadge from "@/components/admin/StatusBadge";
-import { formatPrice } from "@/lib/services-catalog";
+import { formatPrice, getServiceBySlug } from "@/lib/services-catalog";
 import {
   formatItemLabel,
   bookingItemLineTotalCents,
@@ -43,13 +43,35 @@ const STATUS_ACCENT: Record<BookingStatus, string> = {
 const TABLE_COLUMNS = [
   { key: "status", label: "Status", className: "col-status" },
   { key: "guest", label: "Guest", className: "col-guest" },
-  { key: "ref", label: "Reference", className: "col-ref" },
+  { key: "course", label: "Course", className: "col-course" },
   { key: "date", label: "Date", className: "col-date" },
-  { key: "pax", label: "Pax", className: "col-pax" },
+  { key: "pax", label: "Guests", className: "col-pax" },
   { key: "total", label: "Total", className: "col-total" },
+  { key: "ref", label: "Reference", className: "col-ref" },
   { key: "expand", label: "", className: "col-expand" },
   { key: "actions", label: "Actions", className: "col-actions" },
 ] as const;
+
+function formatCourseLabel(booking: BookingWithSlot) {
+  const items = booking.booking_items ?? [];
+  const slot = booking.session_slots;
+
+  if (items.length > 0) {
+    return items
+      .map((item) => {
+        const service = getServiceBySlug(item.service_slug);
+        return service?.title ?? item.service_slug;
+      })
+      .join(" · ");
+  }
+
+  if (slot) {
+    const service = getServiceBySlug(slot.service_slug);
+    return service?.title ?? slot.service_slug;
+  }
+
+  return "—";
+}
 
 function monthKey(date: string) {
   const parsed = new Date(`${date}T12:00:00`);
@@ -148,6 +170,8 @@ function getBookingDetails(booking: BookingWithSlot) {
   );
 
   return {
+    courseLabel: formatCourseLabel(booking),
+    guestCount: participantCount,
     dateLabel: startDate ? formatBookingDates(startDate, maxDuration) : "—",
     total:
       coursesTotal +
@@ -305,12 +329,24 @@ function BookingRow({
           <StatusBadge status={booking.status} compact />
         </div>
         <div className="admin-booking-cell col-guest">{booking.customer_name}</div>
-        <div className="admin-booking-cell col-ref">{booking.reference}</div>
-        <div className="admin-booking-cell col-date">{details.dateLabel}</div>
-        <div className="admin-booking-cell col-pax">{booking.headcount}</div>
+        <div className="admin-booking-cell col-course">
+          <span className="admin-booking-highlight" title={details.courseLabel}>
+            {details.courseLabel}
+          </span>
+        </div>
+        <div className="admin-booking-cell col-date">
+          <span className="admin-booking-highlight">{details.dateLabel}</span>
+        </div>
+        <div className="admin-booking-cell col-pax">
+          <span className="admin-booking-highlight-pill">
+            {details.guestCount}{" "}
+            {details.guestCount === 1 ? "guest" : "guests"}
+          </span>
+        </div>
         <div className="admin-booking-cell col-total">
           {formatPrice(details.total)}
         </div>
+        <div className="admin-booking-cell col-ref">{booking.reference}</div>
         <div className="admin-booking-cell col-expand">
           <ChevronDown
             size={14}

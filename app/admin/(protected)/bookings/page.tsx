@@ -145,21 +145,19 @@ function BookingsContent() {
         description="Review, approve, and confirm payments."
       />
 
-      <div className="admin-filter-panel admin-filter-panel-sticky">
+      <div className="admin-bookings-filters admin-bookings-filters-sticky">
+        <AdminSearch
+          label="Search"
+          value={search}
+          onChange={setSearch}
+          placeholder="Name, email, phone, or reference"
+        />
+
         <div className="admin-filter-panel-tabs">
           <AdminFilterTabs
             tabs={filters}
             active={statusFilter}
             embedded
-          />
-        </div>
-
-        <div className="admin-filter-panel-fields admin-filter-panel-fields-single">
-          <AdminSearch
-            label="Search"
-            value={search}
-            onChange={setSearch}
-            placeholder="Name, email, phone, or reference"
           />
         </div>
       </div>
