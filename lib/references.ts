@@ -41,7 +41,7 @@ export function bookingStatusLabel(status: BookingStatus): string {
 }
 
 export function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "https://immerseafy.com";
 }
 
 export function paymentPageUrl(token: string): string {

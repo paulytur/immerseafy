@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { sendStaffCredentialsEmail } from "@/lib/email";
+import { roleLabel } from "@/lib/roles";
 import { createStaffUser, resetStaffUserPassword } from "@/lib/staff-users";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdminProfile } from "@/lib/supabase/auth";
@@ -60,11 +62,21 @@ export async function POST(request: Request) {
       );
     }
 
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const emailResult = await sendStaffCredentialsEmail({
+      email: normalizedEmail,
+      fullName: String(fullName),
+      role: roleLabel(role as UserRole),
+      temporaryPassword: result.temporaryPassword,
+      regenerated: result.regenerated,
+    });
+
     return NextResponse.json({
-      user: { id: result.userId, email: String(email).trim().toLowerCase() },
+      user: { id: result.userId, email: normalizedEmail },
       temporaryPassword: result.temporaryPassword,
       regenerated: result.regenerated,
       linkedCoachName: result.linkedCoachName,
+      emailResult,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error";
@@ -92,9 +104,26 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: result.error }, { status: 400 });
       }
 
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email, full_name, role")
+        .eq("id", id)
+        .single();
+
+      const emailResult = profile
+        ? await sendStaffCredentialsEmail({
+            email: profile.email,
+            fullName: profile.full_name ?? profile.email,
+            role: roleLabel(profile.role),
+            temporaryPassword: result.temporaryPassword,
+            regenerated: true,
+          })
+        : { skipped: true as const, reason: "User profile not found" };
+
       return NextResponse.json({
         ok: true,
         temporaryPassword: result.temporaryPassword,
+        emailResult,
       });
     }
 

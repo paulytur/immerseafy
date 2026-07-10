@@ -40,7 +40,7 @@ const STEPS = [
     icon: ClipboardCheck,
     title: "Wait for our confirmation",
     detail:
-      "Your status will show Request received. We check availability with the resort within 1–2 business days, then email QR Pay instructions if your slot is approved.",
+      "Your status will show Request received. We check availability with the resort within 1–2 business days, then email QR Pay instructions for a 50% deposit if your slot is approved.",
   },
 ] as const;
 
@@ -85,7 +85,7 @@ export default function BookingHowTo({ currentStep }: BookingHowToProps) {
           <p className="booking-how-to-intro">
             You&apos;re sending a <strong className="text-sand">booking request</strong>,
             not paying yet. We confirm your slot with the resort first — usually
-            within 1–2 business days — then send payment instructions if
+            within 1–2 business days — then send deposit payment instructions if
             approved.
           </p>
 

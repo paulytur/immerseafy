@@ -10,6 +10,7 @@ import AdminEmptyState from "@/components/admin/AdminEmptyState";
 import AdminLoading from "@/components/admin/AdminLoading";
 import AdminSearch from "@/components/admin/AdminSearch";
 import BookingsList from "@/components/admin/BookingsList";
+import { describeEmailResult } from "@/lib/email";
 import type { BookingStatus, BookingWithSlot } from "@/lib/types";
 
 function countByStatus(bookings: BookingWithSlot[]) {
@@ -87,16 +88,21 @@ function BookingsContent() {
       body: JSON.stringify({ action }),
     });
 
+    const data = await res.json();
+
     if (res.ok) {
       const labels: Record<string, string> = {
-        approve: "Payment link sent.",
+        approve: "Booking approved.",
         reject: "Booking rejected.",
-        confirm_payment: "Payment confirmed.",
+        confirm_payment: "Deposit confirmed.",
         cancel: "Booking cancelled.",
+        resend_payment_email: "Payment email resent.",
       };
-      setActionMessage(labels[action] ?? "Updated.");
+      const base = labels[action] ?? "Updated.";
+      const emailNote = describeEmailResult(data.emailResult);
+      setActionMessage(emailNote ? `${base} ${emailNote}` : base);
     } else {
-      setActionMessage("Something went wrong. Try again.");
+      setActionMessage(data.error ?? "Something went wrong. Try again.");
     }
 
     await loadBookings();
@@ -142,7 +148,7 @@ function BookingsContent() {
       <AdminPageHeader
         eyebrow="Reservations"
         title="Bookings"
-        description="Review, approve, and confirm payments."
+        description="Review, approve, and confirm deposits."
       />
 
       <div className="admin-bookings-filters admin-bookings-filters-sticky">

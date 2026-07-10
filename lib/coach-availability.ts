@@ -1,5 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addDays } from "@/lib/dates";
+import {
+  groupAvailabilityByTwoDayPeriod,
+  todayIsoDate,
+} from "@/lib/schedule-utils";
 import type { Coach, CoachDay } from "@/lib/coaches";
 
 export async function fetchCoaches(supabase: SupabaseClient): Promise<Coach[]> {
@@ -69,13 +73,27 @@ export function groupAvailabilityByDate(
 export async function getBookableDates(
   supabase: SupabaseClient
 ): Promise<string[]> {
-  const { data } = await supabase
-    .from("coach_availability")
-    .select("date")
-    .gte("date", new Date().toISOString().slice(0, 10));
+  const { dates } = await getPublicScheduleDates(supabase);
+  return dates;
+}
 
-  const dates = [...new Set((data ?? []).map((r) => r.date))];
-  return dates.sort();
+export async function getPublicScheduleDates(
+  supabase: SupabaseClient
+): Promise<{ dates: string[]; twoDayStartDates: string[] }> {
+  const today = todayIsoDate();
+  const rows = await fetchAvailabilityRows(supabase);
+  const days = groupAvailabilityByDate(
+    rows as Parameters<typeof groupAvailabilityByDate>[0]
+  );
+
+  const upcomingDays = days.filter((day) => day.date >= today);
+  const dates = upcomingDays.map((day) => day.date).sort();
+  const twoDayStartDates = groupAvailabilityByTwoDayPeriod(days)
+    .filter((period) => period.endDate >= today)
+    .map((period) => period.startDate)
+    .sort();
+
+  return { dates, twoDayStartDates };
 }
 
 export async function hasCoachesOnDate(

@@ -1,6 +1,28 @@
 import { Resend } from "resend";
+import {
+  paymentEmailHtml,
+  paymentEmailSubject,
+} from "@/lib/email-templates/payment-email";
+import {
+  invoiceEmailHtml,
+  invoiceEmailSubject,
+} from "@/lib/email-templates/invoice-email";
+import {
+  bookingExpiredEmailHtml,
+  bookingExpiredEmailSubject,
+} from "@/lib/email-templates/booking-expired-email";
+import {
+  staffCredentialsEmailHtml,
+  staffCredentialsEmailSubject,
+} from "@/lib/email-templates/staff-credentials-email";
 import { formatPrice } from "@/lib/services-catalog";
-import { bookingSummaryPdfUrl, paymentPageUrl } from "@/lib/references";
+import { paymentBreakdown } from "@/lib/payment-amounts";
+import { bookingSummaryPdfUrl, paymentPageUrl, siteUrl } from "@/lib/references";
+
+export type EmailResult =
+  | { sent: true }
+  | { skipped: true; reason: string }
+  | { error: string };
 
 function getResend() {
   const key = process.env.RESEND_API_KEY;
@@ -9,7 +31,65 @@ function getResend() {
 }
 
 function fromAddress() {
-  return process.env.RESEND_FROM_EMAIL ?? "Immerseafy <onboarding@resend.dev>";
+  const raw =
+    process.env.RESEND_FROM_EMAIL ?? "Immerseafy <onboarding@resend.dev>";
+  // Resend requires "Name <email@domain.com>" — space before <
+  if (/^[^<]+<[^>]+>$/.test(raw)) {
+    return raw.replace(/^([^<]+)</, (_, name: string) => `${name.trim()} <`);
+  }
+  return raw;
+}
+
+type HtmlEmailOptions = {
+  to: string;
+  subject: string;
+  html: string;
+  attachments?: {
+    filename: string;
+    content: Buffer;
+  }[];
+};
+
+async function sendHtmlEmail(options: HtmlEmailOptions): Promise<EmailResult> {
+  const resend = getResend();
+  if (!resend) {
+    return { skipped: true, reason: "RESEND_API_KEY is not configured" };
+  }
+
+  const { data, error } = await resend.emails.send({
+    from: fromAddress(),
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
+    attachments: options.attachments,
+  });
+
+  if (error) {
+    const message = error.message ?? "Failed to send email";
+    if (
+      message.includes("testing emails") ||
+      message.includes("verify a domain")
+    ) {
+      return {
+        error:
+          "Resend test mode only delivers to your Resend account email. Verify a domain at resend.com/domains and set RESEND_FROM_EMAIL to an address on that domain.",
+      };
+    }
+    return { error: message };
+  }
+
+  if (!data?.id) {
+    return { error: "Resend did not return a message id" };
+  }
+
+  return { sent: true };
+}
+
+export function describeEmailResult(result: EmailResult | undefined): string | null {
+  if (!result) return null;
+  if ("sent" in result) return "Email sent.";
+  if ("reason" in result) return `Email not sent: ${result.reason}`;
+  return `Email failed: ${result.error}`;
 }
 
 type BookingEmailContext = {
@@ -24,60 +104,72 @@ type BookingEmailContext = {
   paymentExpiresAt?: string | null;
 };
 
-export async function sendPaymentEmail(ctx: BookingEmailContext) {
-  const resend = getResend();
-  if (!resend || !ctx.paymentToken) return { skipped: true };
-
-  const payUrl = paymentPageUrl(ctx.paymentToken);
-  const expiry = ctx.paymentExpiresAt
-    ? new Date(ctx.paymentExpiresAt).toLocaleString("en-PH", {
+function formatPaymentExpiry(paymentExpiresAt?: string | null): string {
+  return paymentExpiresAt
+    ? new Date(paymentExpiresAt).toLocaleString("en-PH", {
         dateStyle: "medium",
         timeStyle: "short",
       })
     : "120 hours";
+}
 
-  await resend.emails.send({
-    from: fromAddress(),
+function paymentEmailTemplateData(
+  ctx: BookingEmailContext,
+  variant: "payment" | "reminder" = "payment"
+) {
+  if (!ctx.paymentToken) return null;
+
+  const { depositCents, balanceCents } = paymentBreakdown(ctx.totalCents);
+
+  return {
+    customerName: ctx.customerName,
+    summary: ctx.summary,
+    date: ctx.date,
+    reference: ctx.reference,
+    totalFormatted: formatPrice(ctx.totalCents),
+    depositFormatted: formatPrice(depositCents),
+    balanceFormatted: formatPrice(balanceCents),
+    expiryLabel: formatPaymentExpiry(ctx.paymentExpiresAt),
+    payUrl: paymentPageUrl(ctx.paymentToken),
+    summaryPdfUrl: bookingSummaryPdfUrl(ctx.reference, ctx.paymentToken),
+    variant,
+  };
+}
+
+export async function sendPaymentEmail(
+  ctx: BookingEmailContext
+): Promise<EmailResult> {
+  const template = paymentEmailTemplateData(ctx, "payment");
+  if (!template) {
+    return { skipped: true, reason: "Missing payment token" };
+  }
+
+  return sendHtmlEmail({
     to: ctx.customerEmail,
-    subject: `Payment required — ${ctx.reference}`,
-    html: `
-      <p>Hi ${ctx.customerName},</p>
-      <p>Your booking starting <strong>${ctx.date}</strong> has been confirmed with our resort:</p>
-      <p><strong>${ctx.summary}</strong></p>
-      <p>Please complete payment of <strong>${formatPrice(ctx.totalCents)}</strong> by <strong>${expiry}</strong>.</p>
-      <p><a href="${payUrl}">Pay now via QR Pay</a></p>
-      <p>Reference: <strong>${ctx.reference}</strong></p>
-      ${
-        ctx.paymentToken
-          ? `<p><a href="${bookingSummaryPdfUrl(ctx.reference, ctx.paymentToken)}">Download booking summary (PDF)</a></p>`
-          : ""
-      }
-      <p>— Immerseafy Freediving</p>
-    `,
+    subject: paymentEmailSubject(ctx.reference, "payment"),
+    html: paymentEmailHtml(template),
   });
-
-  return { sent: true };
 }
 
 export async function sendInvoiceEmail(
   ctx: BookingEmailContext & { invoiceNumber: string },
   pdfBuffer: Uint8Array
-) {
-  const resend = getResend();
-  if (!resend) return { skipped: true };
+): Promise<EmailResult> {
+  const { depositCents, balanceCents } = paymentBreakdown(ctx.totalCents);
 
-  await resend.emails.send({
-    from: fromAddress(),
+  return sendHtmlEmail({
     to: ctx.customerEmail,
-    subject: `Booking confirmed — Invoice ${ctx.invoiceNumber}`,
-    html: `
-      <p>Hi ${ctx.customerName},</p>
-      <p>Payment received. Your booking starting <strong>${ctx.date}</strong> is <strong>confirmed</strong>:</p>
-      <p><strong>${ctx.summary}</strong></p>
-      <p>Invoice <strong>${ctx.invoiceNumber}</strong> is attached.</p>
-      <p>Reference: <strong>${ctx.reference}</strong></p>
-      <p>— Immerseafy Freediving</p>
-    `,
+    subject: invoiceEmailSubject(ctx.invoiceNumber),
+    html: invoiceEmailHtml({
+      customerName: ctx.customerName,
+      summary: ctx.summary,
+      date: ctx.date,
+      reference: ctx.reference,
+      invoiceNumber: ctx.invoiceNumber,
+      totalFormatted: formatPrice(ctx.totalCents),
+      depositFormatted: formatPrice(depositCents),
+      balanceFormatted: formatPrice(balanceCents),
+    }),
     attachments: [
       {
         filename: `${ctx.invoiceNumber}.pdf`,
@@ -85,50 +177,60 @@ export async function sendInvoiceEmail(
       },
     ],
   });
-
-  return { sent: true };
 }
 
-export async function sendBookingExpiredEmail(ctx: BookingEmailContext) {
-  const resend = getResend();
-  if (!resend) return { skipped: true };
-
-  await resend.emails.send({
-    from: fromAddress(),
+export async function sendBookingExpiredEmail(
+  ctx: BookingEmailContext
+): Promise<EmailResult> {
+  return sendHtmlEmail({
     to: ctx.customerEmail,
-    subject: `Booking expired — ${ctx.reference}`,
-    html: `
-      <p>Hi ${ctx.customerName},</p>
-      <p>Your booking starting <strong>${ctx.date}</strong> has expired because payment was not received in time:</p>
-      <p><strong>${ctx.summary}</strong></p>
-      <p>Reference: <strong>${ctx.reference}</strong></p>
-      <p>Contact us if you'd like to book again.</p>
-      <p>— Immerseafy Freediving</p>
-    `,
+    subject: bookingExpiredEmailSubject(ctx.reference),
+    html: bookingExpiredEmailHtml({
+      customerName: ctx.customerName,
+      summary: ctx.summary,
+      date: ctx.date,
+      reference: ctx.reference,
+      contactUrl: `${siteUrl()}/contact`,
+    }),
   });
-
-  return { sent: true };
 }
 
-export async function sendPaymentReminderEmail(ctx: BookingEmailContext) {
-  const resend = getResend();
-  if (!resend || !ctx.paymentToken) return { skipped: true };
+export async function sendPaymentReminderEmail(
+  ctx: BookingEmailContext
+): Promise<EmailResult> {
+  const template = paymentEmailTemplateData(ctx, "reminder");
+  if (!template) {
+    return { skipped: true, reason: "Missing payment token" };
+  }
 
-  const payUrl = paymentPageUrl(ctx.paymentToken);
-
-  await resend.emails.send({
-    from: fromAddress(),
+  return sendHtmlEmail({
     to: ctx.customerEmail,
-    subject: `Payment reminder — ${ctx.reference}`,
-    html: `
-      <p>Hi ${ctx.customerName},</p>
-      <p>Reminder: payment of <strong>${formatPrice(ctx.totalCents)}</strong> for your booking on <strong>${ctx.date}</strong> is due soon:</p>
-      <p><strong>${ctx.summary}</strong></p>
-      <p><a href="${payUrl}">Pay now via QR Pay</a></p>
-      <p>Reference: <strong>${ctx.reference}</strong></p>
-      <p>— Immerseafy Freediving</p>
-    `,
+    subject: paymentEmailSubject(ctx.reference, "reminder"),
+    html: paymentEmailHtml(template),
   });
+}
 
-  return { sent: true };
+type StaffCredentialsContext = {
+  email: string;
+  fullName: string;
+  role: string;
+  temporaryPassword: string;
+  regenerated?: boolean;
+};
+
+export async function sendStaffCredentialsEmail(
+  ctx: StaffCredentialsContext
+): Promise<EmailResult> {
+  return sendHtmlEmail({
+    to: ctx.email,
+    subject: staffCredentialsEmailSubject(ctx.regenerated),
+    html: staffCredentialsEmailHtml({
+      fullName: ctx.fullName,
+      email: ctx.email,
+      role: ctx.role,
+      temporaryPassword: ctx.temporaryPassword,
+      loginUrl: `${siteUrl()}/admin/login`,
+      regenerated: ctx.regenerated,
+    }),
+  });
 }

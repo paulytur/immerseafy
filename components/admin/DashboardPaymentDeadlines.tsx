@@ -20,7 +20,7 @@ export default function DashboardPaymentDeadlines({
               Payment deadlines
             </h2>
             <p className="text-sm text-sand-muted">
-              Awaiting bookings, sorted by soonest expiry.
+              Awaiting deposits, sorted by soonest expiry.
             </p>
           </div>
         </div>
@@ -43,7 +43,9 @@ export default function DashboardPaymentDeadlines({
                 </span>
               </div>
               <p className="mt-0.5 text-xs text-sand-muted">
-                Trip {deadline.dateLabel} · {formatPrice(deadline.totalCents)}
+                Trip {deadline.dateLabel} · Deposit{" "}
+                {formatPrice(deadline.depositCents)} of{" "}
+                {formatPrice(deadline.totalCents)}
               </p>
               <p className="mt-0.5 text-xs text-sand-muted">
                 Expires {deadline.expiresAt}

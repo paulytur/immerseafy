@@ -14,6 +14,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import type { UserRole } from "@/lib/types";
 import { canManageAdminOnlyPages, roleLabel } from "@/lib/roles";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -104,6 +105,8 @@ export default function AdminShell({
             <ExternalLink size={16} />
             View website
           </Link>
+
+          <ThemeToggle variant="admin" />
 
           <button
             type="button"

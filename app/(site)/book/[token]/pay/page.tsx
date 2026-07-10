@@ -5,6 +5,7 @@ import { Clock, QrCode } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatPrice } from "@/lib/services-catalog";
 import { getBookingEmailContext } from "@/lib/booking-items";
+import { paymentBreakdown } from "@/lib/payment-amounts";
 import { BOOKING_STATUS_LABELS } from "@/lib/references";
 import BookingSummaryDownload from "@/components/booking/BookingSummaryDownload";
 
@@ -32,6 +33,9 @@ export default async function PaymentPage({
   }
 
   const ctx = await getBookingEmailContext(supabase, booking);
+  const { depositCents, balanceCents, depositPercent } = paymentBreakdown(
+    ctx.totalCents
+  );
 
   const { data: settings } = await supabase
     .from("site_settings")
@@ -65,10 +69,14 @@ export default async function PaymentPage({
 
             <div className="text-center">
               <p className="text-xs uppercase tracking-wide text-sand-muted">
-                Amount due
+                Deposit due ({depositPercent}%)
               </p>
               <p className="mt-1 font-display text-4xl font-bold text-teal">
-                {formatPrice(ctx.totalCents)}
+                {formatPrice(depositCents)}
+              </p>
+              <p className="mt-2 text-sm text-sand-muted">
+                Estimated total {formatPrice(ctx.totalCents)} · Balance on
+                arrival {formatPrice(balanceCents)}
               </p>
               <p className="mt-2 text-sm text-sand-muted">
                 Ref{" "}
@@ -79,9 +87,15 @@ export default async function PaymentPage({
             </div>
 
             {expiresAt && (
-              <div className="flex items-center justify-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-200">
-                <Clock size={16} />
-                Pay by {expiresAt}
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-200">
+                  <Clock size={16} />
+                  Pay deposit by {expiresAt}
+                </div>
+                <p className="text-center text-xs text-sand-muted">
+                  Send your {depositPercent}% deposit by this deadline to hold
+                  your slot.
+                </p>
               </div>
             )}
 
@@ -121,7 +135,7 @@ export default async function PaymentPage({
               </li>
               <li className="flex gap-2">
                 <span className="font-semibold text-teal">2.</span>
-                Pay exactly {formatPrice(ctx.totalCents)}
+                Pay exactly {formatPrice(depositCents)} (50% deposit)
               </li>
               <li className="flex gap-2">
                 <span className="font-semibold text-teal">3.</span>
@@ -129,7 +143,8 @@ export default async function PaymentPage({
               </li>
               <li className="flex gap-2">
                 <span className="font-semibold text-teal">4.</span>
-                We&apos;ll email your PDF invoice once confirmed
+                We&apos;ll email your deposit invoice once confirmed. Pay the
+                balance on arrival.
               </li>
             </ol>
           </div>

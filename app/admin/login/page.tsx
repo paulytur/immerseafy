@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { userMustResetPassword } from "@/lib/staff-users";
 import Logo from "@/components/Logo";
+import ThemeToggle from "@/components/ThemeToggle";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -45,7 +46,11 @@ function LoginForm() {
   }
 
   return (
-    <div className="hero-gradient flex min-h-screen items-center justify-center px-4 py-12">
+    <div className="hero-gradient relative flex min-h-screen items-center justify-center px-4 py-12">
+      <div className="absolute top-4 right-4 md:top-6 md:right-6">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
           <Logo className="h-12 w-auto" width={200} />

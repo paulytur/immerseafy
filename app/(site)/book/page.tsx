@@ -33,7 +33,6 @@ import {
   bookingGroupHeadcount,
   type BookingExtras,
 } from "@/lib/booking-extras";
-import { filterConsecutivePairs } from "@/lib/coach-availability";
 import {
   formatPhilippinePhoneE164,
   validatePhilippineMobilePhone,
@@ -74,6 +73,7 @@ function BookPageContent() {
   const [step, setStep] = useState(1);
   const [sessionDurationDays, setSessionDurationDays] = useState<1 | 2>(2);
   const [coachDates, setCoachDates] = useState<string[]>([]);
+  const [twoDayStartDates, setTwoDayStartDates] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -109,10 +109,14 @@ function BookPageContent() {
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "Could not load schedule");
-        return data.dates ?? [];
+        return {
+          dates: (data.dates ?? []) as string[],
+          twoDayStartDates: (data.twoDayStartDates ?? []) as string[],
+        };
       })
-      .then((dates: string[]) => {
+      .then(({ dates, twoDayStartDates: twoDayStarts }) => {
         setCoachDates(dates);
+        setTwoDayStartDates(twoDayStarts);
         setLoading(false);
       })
       .catch((err: Error) => {
@@ -125,11 +129,9 @@ function BookPageContent() {
   }, []);
 
   const sessionDates = useMemo(() => {
-    if (sessionDurationDays === 1) {
-      return coachDates;
-    }
-    return filterConsecutivePairs(coachDates);
-  }, [coachDates, sessionDurationDays]);
+    if (sessionDurationDays === 1) return coachDates;
+    return twoDayStartDates;
+  }, [coachDates, twoDayStartDates, sessionDurationDays]);
 
   const availableDates = useMemo(() => {
     if (step === 1) return sessionDates;
@@ -344,7 +346,12 @@ function BookPageContent() {
     );
   }
 
-  const hasNoDates = !loading && !loadError && sessionDates.length === 0;
+  const hasNoDates = !loading && !loadError && coachDates.length === 0;
+  const hasDatesButNotForDuration =
+    !loading &&
+    !loadError &&
+    coachDates.length > 0 &&
+    sessionDates.length === 0;
 
   return (
     <>
@@ -378,6 +385,30 @@ function BookPageContent() {
                   Contact us
                 </Link>
               </p>
+              {loadError && (
+                <p className="mt-3 text-xs text-red-300">{loadError}</p>
+              )}
+            </div>
+          </div>
+        ) : hasDatesButNotForDuration ? (
+          <div className="mx-auto max-w-lg">
+            <div className="card-surface rounded-xl p-8 text-center">
+              <CalendarOff size={40} className="mx-auto text-teal/60" />
+              <p className="mt-4 font-display text-lg font-semibold text-sand">
+                No {sessionDurationDays}-day trips available
+              </p>
+              <p className="mt-3 text-sm text-sand-muted">
+                Coaches are scheduled, but not for consecutive{" "}
+                {sessionDurationDays}-day blocks. Try a 1-day trip, or ask us to
+                open more dates.
+              </p>
+              <button
+                type="button"
+                onClick={() => handleSessionDurationChange(1)}
+                className="btn-primary mt-6 inline-flex"
+              >
+                Switch to 1-day trip
+              </button>
             </div>
           </div>
         ) : hasNoDates ? (

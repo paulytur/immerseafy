@@ -1,13 +1,20 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { getBookableDates } from "@/lib/coach-availability";
+import { getPublicScheduleDates } from "@/lib/coach-availability";
 
 function createPublicClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!url || !key) {
-    throw new Error("Missing Supabase URL or publishable key in environment");
+  if (
+    !url ||
+    !key ||
+    url.includes("your-project") ||
+    key === "your_anon_key"
+  ) {
+    throw new Error(
+      "Missing Supabase URL or publishable key in environment. Add them to .env.local."
+    );
   }
 
   return createClient(url, key, {
@@ -18,9 +25,9 @@ function createPublicClient() {
 export async function GET() {
   try {
     const supabase = createPublicClient();
-    const dates = await getBookableDates(supabase);
+    const schedule = await getPublicScheduleDates(supabase);
 
-    return NextResponse.json({ dates });
+    return NextResponse.json(schedule);
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to load schedule";

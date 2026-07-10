@@ -12,6 +12,7 @@ import {
 import AdminEmptyState from "@/components/admin/AdminEmptyState";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { formatPrice, getServiceBySlug } from "@/lib/services-catalog";
+import { paymentBreakdown } from "@/lib/payment-amounts";
 import {
   formatItemLabel,
   bookingItemLineTotalCents,
@@ -163,21 +164,24 @@ function getBookingDetails(booking: BookingWithSlot) {
     (sum, line) => sum + line.amountCents,
     0
   );
-  const extrasLines = getSelectedExtrasDisplay(
-    extras,
-    maxDuration,
-    participantCount
-  );
+  const total =
+    coursesTotal +
+    bookingExtrasTotalCents(extras, maxDuration, participantCount);
+  const { depositCents, balanceCents } = paymentBreakdown(total);
 
   return {
     courseLabel: formatCourseLabel(booking),
     guestCount: participantCount,
     dateLabel: startDate ? formatBookingDates(startDate, maxDuration) : "—",
-    total:
-      coursesTotal +
-      bookingExtrasTotalCents(extras, maxDuration, participantCount),
+    total,
+    depositCents,
+    balanceCents,
     activityLines,
-    extrasLines,
+    extrasLines: getSelectedExtrasDisplay(
+      extras,
+      maxDuration,
+      participantCount
+    ),
     submittedAt: new Date(booking.created_at).toLocaleString("en-PH", {
       dateStyle: "medium",
       timeStyle: "short",
@@ -272,14 +276,24 @@ function BookingRowActions({
 
   if (booking.status === "awaiting_payment") {
     return (
-      <button
-        type="button"
-        disabled={busy}
-        onClick={(event) => run(event, "confirm_payment")}
-        className="admin-booking-btn admin-booking-btn-primary"
-      >
-        {busy ? "…" : "Confirm paid"}
-      </button>
+      <>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={(event) => run(event, "confirm_payment")}
+          className="admin-booking-btn admin-booking-btn-primary"
+        >
+          {busy ? "…" : "Confirm deposit"}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={(event) => run(event, "resend_payment_email")}
+          className="admin-booking-btn"
+        >
+          {busy ? "…" : "Resend email"}
+        </button>
+      </>
     );
   }
 
@@ -354,7 +368,9 @@ function BookingRow({
           />
         </div>
         <div className="admin-booking-cell col-actions">
-          <BookingRowActions booking={booking} busy={busy} onAction={onAction} />
+          <div className="admin-booking-actions">
+            <BookingRowActions booking={booking} busy={busy} onAction={onAction} />
+          </div>
         </div>
       </div>
 
@@ -382,7 +398,7 @@ function BookingRow({
             </a>
             {details.paymentExpiresAt && booking.status === "awaiting_payment" ? (
               <span className="admin-booking-expiry">
-                Pay by {details.paymentExpiresAt}
+                Deposit due by {details.paymentExpiresAt}
               </span>
             ) : null}
           </div>
@@ -411,6 +427,9 @@ function BookingRow({
           <div className="admin-booking-footer">
             <span className="admin-booking-meta-row">
               Submitted {details.submittedAt}
+              {booking.status === "awaiting_payment"
+                ? ` · Deposit ${formatPrice(details.depositCents)} · Balance ${formatPrice(details.balanceCents)} on arrival`
+                : ""}
             </span>
             {["pending", "awaiting_payment", "confirmed"].includes(
               booking.status

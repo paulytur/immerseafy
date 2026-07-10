@@ -48,8 +48,8 @@ export function groupAvailabilityByTwoDayPeriod(
   return periods.sort((a, b) => a.startDate.localeCompare(b.startDate));
 }
 
-export function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
+export function todayIsoDate(timeZone = "Asia/Manila"): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
 }
 
 export function daysFromScheduleDate(

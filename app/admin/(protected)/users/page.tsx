@@ -9,6 +9,7 @@ import AdminSelect from "@/components/admin/AdminSelect";
 import TeamAccountsList from "@/components/admin/TeamAccountsList";
 import CoachRosterPanel from "@/components/admin/CoachRosterPanel";
 import { roleLabel } from "@/lib/roles";
+import type { EmailResult } from "@/lib/email";
 import type { Coach } from "@/lib/coaches";
 import type { Profile, UserRole } from "@/lib/types";
 
@@ -41,7 +42,54 @@ type RevealedCredentials = {
   email: string;
   temporaryPassword: string;
   regenerated: boolean;
+  emailResult?: EmailResult;
 };
+
+function emailStatusMessage(result: EmailResult | undefined, email: string) {
+  if (!result) {
+    return {
+      tone: "muted" as const,
+      message: (
+        <>
+          Share these credentials with <strong>{email}</strong> in person. This
+          password is shown once and is not stored in plain text.
+        </>
+      ),
+    };
+  }
+
+  if ("sent" in result) {
+    return {
+      tone: "success" as const,
+      message: (
+        <>
+          Login details were emailed to <strong>{email}</strong>.
+        </>
+      ),
+    };
+  }
+
+  if ("reason" in result) {
+    return {
+      tone: "warning" as const,
+      message: (
+        <>
+          Email was not sent ({result.reason}). Share the credentials below
+          manually.
+        </>
+      ),
+    };
+  }
+
+  return {
+    tone: "error" as const,
+    message: (
+      <>
+        Email failed ({result.error}). Share the credentials below manually.
+      </>
+    ),
+  };
+}
 
 function CredentialReveal({
   credentials,
@@ -56,14 +104,28 @@ function CredentialReveal({
     await navigator.clipboard.writeText(credentials.temporaryPassword);
   }
 
+  const emailStatus = emailStatusMessage(
+    credentials.emailResult,
+    credentials.email
+  );
+
   return (
     <div className="admin-panel border-amber-500/30 bg-amber-500/10">
       <p className="font-semibold text-amber-900 dark:text-amber-100">
         {credentials.regenerated ? "New temporary password" : "Account created"}
       </p>
-      <p className="mt-2 text-sm text-sand-muted">
-        Share these credentials with <strong>{credentials.email}</strong> in
-        person. This password is shown once and is not stored in plain text.
+      <p
+        className={`mt-2 text-sm ${
+          emailStatus.tone === "success"
+            ? "text-teal"
+            : emailStatus.tone === "error"
+              ? "text-red-300"
+              : emailStatus.tone === "warning"
+                ? "text-amber-200"
+                : "text-sand-muted"
+        }`}
+      >
+        {emailStatus.message}
       </p>
 
       <div className="mt-4 space-y-3">
@@ -228,6 +290,7 @@ export default function AdminUsersPage() {
       email: createdEmail,
       temporaryPassword: data.temporaryPassword,
       regenerated: Boolean(data.regenerated),
+      emailResult: data.emailResult,
     });
     setLinkedCoachName(data.linkedCoachName);
     await loadAll();
@@ -316,6 +379,7 @@ export default function AdminUsersPage() {
       email: user.email,
       temporaryPassword: data.temporaryPassword,
       regenerated: true,
+      emailResult: data.emailResult,
     });
   }
 

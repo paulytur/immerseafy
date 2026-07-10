@@ -38,3 +38,6 @@ next-env.d.ts
 # local data
 .data/
 .vercel
+.env
+.env.local
+.env.*.local

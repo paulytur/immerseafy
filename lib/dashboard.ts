@@ -18,6 +18,7 @@ import {
   type CoachTwoDayPeriod,
 } from "@/lib/schedule-utils";
 import type { BookingItem, BookingStatus, BookingWithSlot } from "@/lib/types";
+import { depositDueCents } from "@/lib/payment-amounts";
 
 export type DashboardBookingPreview = {
   id: string;
@@ -59,6 +60,7 @@ export type DashboardPaymentDeadline = {
   expiresAt: string;
   hoursLeft: number;
   totalCents: number;
+  depositCents: number;
 };
 
 const ACTIVE_STATUSES: BookingStatus[] = [
@@ -210,7 +212,7 @@ export function buildDashboardTrips(
     if (booking.status === "awaiting_payment") trip.awaitingCount += 1;
     if (booking.status === "confirmed") {
       trip.confirmedCount += 1;
-      trip.confirmedRevenueCents += bookingTotalCents(booking);
+      trip.confirmedRevenueCents += depositDueCents(bookingTotalCents(booking));
     }
 
     trip.bookings.push(bookingPreview(booking));
@@ -311,6 +313,7 @@ export function buildPaymentDeadlines(
         }),
         hoursLeft,
         totalCents: bookingTotalCents(booking),
+        depositCents: depositDueCents(bookingTotalCents(booking)),
       };
     })
     .sort((a, b) => a.hoursLeft - b.hoursLeft)

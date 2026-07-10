@@ -76,8 +76,23 @@ export async function POST(
         })
         .eq("id", id);
 
-      await sendPaymentEmail({ ...emailCtx, paymentExpiresAt });
-      return NextResponse.json({ ok: true });
+      const emailResult = await sendPaymentEmail({
+        ...emailCtx,
+        paymentExpiresAt,
+      });
+      return NextResponse.json({ ok: true, emailResult });
+    }
+
+    if (action === "resend_payment_email") {
+      if (booking.status !== "awaiting_payment") {
+        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+      }
+
+      const emailResult = await sendPaymentEmail({
+        ...emailCtx,
+        paymentExpiresAt: booking.payment_expires_at,
+      });
+      return NextResponse.json({ ok: true, emailResult });
     }
 
     if (action === "reject") {
@@ -130,7 +145,8 @@ export async function POST(
               sessionDurationDays,
               participantCount
             ).map((item) => ({
-              label: item.subtitle ? `${item.label} — ${item.subtitle}` : item.label,
+              label: item.label,
+              subtitle: item.subtitle,
               amountCents: item.amountCents,
             }))
           : [
@@ -166,8 +182,11 @@ export async function POST(
         sent_at: new Date().toISOString(),
       });
 
-      await sendInvoiceEmail({ ...emailCtx, invoiceNumber }, pdfBytes);
-      return NextResponse.json({ ok: true, invoiceNumber });
+      const emailResult = await sendInvoiceEmail(
+        { ...emailCtx, invoiceNumber },
+        pdfBytes
+      );
+      return NextResponse.json({ ok: true, invoiceNumber, emailResult });
     }
 
     if (action === "cancel") {

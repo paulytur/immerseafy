@@ -1702,6 +1702,12 @@ body {
 }
 
 .admin-dashboard-trip-stat-confirmed {
+  color: #047857;
+  border-color: color-mix(in srgb, #10b981 30%, transparent);
+  background: color-mix(in srgb, #10b981 12%, var(--card-bg));
+}
+
+.dark .admin-dashboard-trip-stat-confirmed {
   color: #6ee7b7;
   border-color: color-mix(in srgb, #10b981 25%, transparent);
   background: color-mix(in srgb, #10b981 10%, var(--card-bg));
@@ -1898,10 +1904,10 @@ body {
   display: grid;
   grid-template-columns:
     5.75rem minmax(5.5rem, 0.85fr) minmax(8rem, 1.15fr) minmax(7rem, 1fr) 5rem
-    4.75rem 7rem 1.5rem minmax(7.5rem, auto);
+    4.75rem minmax(6.5rem, 0.9fr) 1.5rem minmax(12.5rem, max-content);
   align-items: center;
   column-gap: 0.625rem;
-  min-width: 58rem;
+  min-width: 62rem;
 }
 
 .admin-bookings-head {
@@ -1938,6 +1944,12 @@ body {
 .admin-bookings-head-cell.col-actions,
 .admin-booking-cell.col-actions {
   text-align: right;
+}
+
+.admin-bookings-head-cell.col-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .admin-bookings-body {
@@ -2040,8 +2052,17 @@ body {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 0.25rem;
+  min-width: max-content;
   overflow: visible;
+  white-space: nowrap;
+}
+
+.admin-booking-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.375rem;
+  flex-shrink: 0;
 }
 
 .admin-booking-actions-empty {
@@ -2059,14 +2080,19 @@ body {
 }
 
 .admin-booking-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 0.375rem;
   border: 1px solid color-mix(in srgb, var(--brand-teal) 22%, transparent);
   background: var(--input-bg);
   padding: 0.25rem 0.5rem;
   font-size: 0.6875rem;
   font-weight: 600;
+  line-height: 1.2;
   color: var(--text-primary);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .admin-booking-btn:hover:not(:disabled) {
