@@ -199,10 +199,10 @@ export default function AdminSchedulePage() {
           )}
 
           {!isAdmin && !myCoach && (
-            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
               Your account isn&apos;t linked to a coach profile yet. Ask an
               admin to link it under{" "}
-              <strong className="text-amber-100">Users → Coach profile</strong>
+              <strong className="text-amber-950 dark:text-amber-100">Users → Coach profile</strong>
               .
             </p>
           )}

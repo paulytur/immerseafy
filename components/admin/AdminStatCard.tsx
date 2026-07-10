@@ -11,8 +11,8 @@ type AdminStatCardProps = {
 
 const accents = {
   teal: "bg-teal/15 text-teal",
-  amber: "bg-amber-500/15 text-amber-300",
-  emerald: "bg-emerald-500/15 text-emerald-300",
+  amber: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+  emerald: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
 };
 
 export default function AdminStatCard({

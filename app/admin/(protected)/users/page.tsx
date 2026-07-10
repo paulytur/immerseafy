@@ -58,7 +58,7 @@ function CredentialReveal({
 
   return (
     <div className="admin-panel border-amber-500/30 bg-amber-500/10">
-      <p className="font-semibold text-amber-100">
+      <p className="font-semibold text-amber-900 dark:text-amber-100">
         {credentials.regenerated ? "New temporary password" : "Account created"}
       </p>
       <p className="mt-2 text-sm text-sand-muted">

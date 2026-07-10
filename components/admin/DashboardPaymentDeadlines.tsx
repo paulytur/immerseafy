@@ -14,7 +14,7 @@ export default function DashboardPaymentDeadlines({
     <section className="admin-panel">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Clock3 size={18} className="text-amber-300" />
+          <Clock3 size={18} className="text-amber-600 dark:text-amber-300" />
           <div>
             <h2 className="font-display text-lg font-semibold text-sand">
               Payment deadlines
