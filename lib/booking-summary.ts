@@ -6,6 +6,7 @@ import {
 import {
   bookingGroupHeadcount,
   extrasFromBookingRecord,
+  resolveSessionDurationDays,
   type BookingExtras,
 } from "@/lib/booking-extras";
 import {
@@ -34,6 +35,7 @@ type BookingRecord = {
   carpool_requested?: boolean | null;
   room_requested?: boolean | null;
   room_decline_reason?: string | null;
+  trip_duration_days?: 1 | 2 | null;
   session_slots?: {
     service_slug: string;
     date: string;
@@ -49,11 +51,11 @@ export async function buildBookingSummaryPdfData(
   const extras = extrasFromBookingRecord(booking);
   const items = await fetchBookingItems(supabase, booking.id);
 
-  const sessionDurationDays = (
-    items.length > 0
-      ? Math.max(...items.map((item) => item.duration_days), 1)
-      : 1
-  ) as 1 | 2;
+  const sessionDurationDays = resolveSessionDurationDays(
+    booking.trip_duration_days,
+    items,
+    extras
+  );
 
   const participantCount =
     items.length > 0

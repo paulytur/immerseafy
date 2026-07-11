@@ -50,6 +50,7 @@ export type Booking = {
   carpool_requested: boolean;
   room_requested: boolean;
   room_decline_reason: string | null;
+  trip_duration_days: 1 | 2 | null;
   status: BookingStatus;
   payment_expires_at: string | null;
   approved_at: string | null;

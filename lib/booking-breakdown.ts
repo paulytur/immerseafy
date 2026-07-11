@@ -18,12 +18,14 @@ function appendExtrasLines(
   lines: BreakdownLine[],
   extras: BookingExtras,
   sessionDurationDays: 1 | 2,
-  participantCount: number
+  participantCount: number,
+  items: Parameters<typeof getSelectedExtrasDisplay>[3] = []
 ) {
   for (const extra of getSelectedExtrasDisplay(
     extras,
     sessionDurationDays,
-    participantCount
+    participantCount,
+    items
   )) {
     lines.push({
       label: extra.label,
@@ -50,7 +52,7 @@ export function breakdownLinesFromResolved(
     amountCents: item.lineTotalCents,
   }));
 
-  appendExtrasLines(lines, extras, sessionDurationDays, participantCount);
+  appendExtrasLines(lines, extras, sessionDurationDays, participantCount, items);
   return lines;
 }
 
@@ -76,6 +78,6 @@ export function breakdownLinesFromDbItems(
     amountCents: bookingItemLineTotalCents(item),
   }));
 
-  appendExtrasLines(lines, extras, sessionDurationDays, participantCount);
+  appendExtrasLines(lines, extras, sessionDurationDays, participantCount, items);
   return lines;
 }

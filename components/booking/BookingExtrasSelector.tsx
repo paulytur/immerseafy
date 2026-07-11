@@ -1,19 +1,26 @@
 "use client";
 
-import { Car, Check, Home, Users, UtensilsCrossed } from "lucide-react";
+import { Car, Check, Home, MapPin, Users, UtensilsCrossed } from "lucide-react";
 import {
+  dayTourFeeSubtitle,
+  dayTourFeeTotalCents,
+  dayTourParticipantCount,
+  DAY_TOUR_FEE_LABEL,
   extraUnitPriceCents,
   mealsPackageDescription,
+  BOOKING_EXTRA_PRICES,
   SHARED_AC_ROOM_LABEL,
   sharedAcRoomSubtitle,
   type BookingExtraKey,
   type BookingExtras,
+  type BookingLineForExtras,
 } from "@/lib/booking-extras";
 import { formatPrice } from "@/lib/services-catalog";
 
 type BookingExtrasSelectorProps = {
   sessionDurationDays: 1 | 2;
   participantCount: number;
+  lineItems: BookingLineForExtras[];
   value: BookingExtras;
   onChange: (extras: BookingExtras) => void;
 };
@@ -29,10 +36,13 @@ type ExtraOption = {
 export default function BookingExtrasSelector({
   sessionDurationDays,
   participantCount,
+  lineItems,
   value,
   onChange,
 }: BookingExtrasSelectorProps) {
   const count = Math.max(1, participantCount);
+  const dayTourCount = dayTourParticipantCount(lineItems, sessionDurationDays);
+  const showDayTourFee = dayTourCount > 0;
 
   const options: ExtraOption[] = [
     {
@@ -79,6 +89,39 @@ export default function BookingExtrasSelector({
           )}
         </p>
       </div>
+
+      {showDayTourFee && (
+        <div className="booking-extra-card booking-extra-card-locked" aria-label={DAY_TOUR_FEE_LABEL}>
+          <div className="booking-extra-card-main">
+            <div className="booking-extra-icon">
+              <MapPin size={18} />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <p className="booking-extra-title">{DAY_TOUR_FEE_LABEL}</p>
+                <span className="booking-extra-check booking-extra-check-selected" aria-hidden>
+                  <Check size={12} strokeWidth={3} />
+                </span>
+              </div>
+              <p className="booking-extra-subtitle">
+                {dayTourFeeSubtitle(sessionDurationDays, dayTourCount)}
+              </p>
+            </div>
+          </div>
+
+          <div className="booking-extra-card-footer">
+            <span className="booking-extra-unit">
+              {formatPrice(BOOKING_EXTRA_PRICES.dayTourFeeCents)}
+              <span className="text-sand-muted"> / person</span>
+            </span>
+            <span className="booking-extra-total">
+              {formatPrice(dayTourFeeTotalCents(dayTourCount))} total
+              {dayTourCount > 1 ? ` · ${dayTourCount} people` : ""}
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="booking-extras-grid">
         {options

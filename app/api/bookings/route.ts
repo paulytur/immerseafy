@@ -13,6 +13,7 @@ import {
   normalizeBookingExtras,
   validateBookingExtras,
 } from "@/lib/booking-extras";
+import { todayIsoDate } from "@/lib/schedule-utils";
 import {
   formatPhilippinePhoneE164,
   validatePhilippineMobilePhone,
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
         .select("*")
         .eq("id", sessionSlotId)
         .eq("status", "open")
-        .gte("date", new Date().toISOString().slice(0, 10))
+        .gt("date", todayIsoDate())
         .single();
 
       if (slotError || !slot) {
@@ -119,6 +120,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (startDate <= todayIsoDate()) {
+      return NextResponse.json(
+        { error: "Choose a future start date. Same-day bookings are not available online." },
+        { status: 400 }
+      );
+    }
+
     const lineItems = items as BookingLineItemInput[];
     const tripDurationDays = (
       body.tripDurationDays === 2 ? 2 : body.tripDurationDays === 1 ? 1 : null
@@ -171,6 +179,7 @@ export async function POST(request: Request) {
         carpool_requested: extras.carpool,
         room_requested: extras.room,
         room_decline_reason: extras.room ? null : extras.roomDeclineReason || null,
+        trip_duration_days: sessionDurationDays,
         status: "pending",
       })
       .select()

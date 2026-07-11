@@ -182,7 +182,7 @@ function BookPageContent() {
       );
     }, 0);
 
-    return coursesTotal + bookingExtrasTotalCents(extras, sessionDurationDays, participantCount);
+    return coursesTotal + bookingExtrasTotalCents(extras, sessionDurationDays, participantCount, lineItems);
   }, [lineItems, sessionDurationDays, extras, participantCount]);
 
   const canAddCourse = lineItems.length < BOOKING_SERVICES.length;
@@ -549,6 +549,7 @@ function BookPageContent() {
                   <BookingExtrasStep
                     sessionDurationDays={sessionDurationDays}
                     participantCount={participantCount}
+                    lineItems={lineItems}
                     value={extras}
                     onChange={setExtras}
                   />

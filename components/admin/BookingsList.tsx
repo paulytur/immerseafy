@@ -23,6 +23,7 @@ import {
   bookingParticipantCount,
   extrasFromBookingRecord,
   getSelectedExtrasDisplay,
+  resolveSessionDurationDays,
 } from "@/lib/booking-extras";
 import { formatBookingDates } from "@/lib/schedule-utils";
 import type { BookingStatus, BookingWithSlot } from "@/lib/types";
@@ -129,9 +130,11 @@ function getBookingDetails(booking: BookingWithSlot) {
   const items = booking.booking_items ?? [];
   const slot = booking.session_slots;
   const extras = extrasFromBookingRecord(booking);
-  const maxDuration = Math.max(...items.map((item) => item.duration_days), 1) as
-    | 1
-    | 2;
+  const sessionDurationDays = resolveSessionDurationDays(
+    booking.trip_duration_days,
+    items,
+    extras
+  );
   const participantCount = bookingParticipantCount(items);
   const startDate = bookingSortDate(booking);
 
@@ -167,21 +170,22 @@ function getBookingDetails(booking: BookingWithSlot) {
   );
   const total =
     coursesTotal +
-    bookingExtrasTotalCents(extras, maxDuration, participantCount);
+    bookingExtrasTotalCents(extras, sessionDurationDays, participantCount, items);
   const { depositCents, balanceCents } = paymentBreakdown(total);
 
   return {
     courseLabel: formatCourseLabel(booking),
     guestCount: participantCount,
-    dateLabel: startDate ? formatBookingDates(startDate, maxDuration) : "—",
+    dateLabel: startDate ? formatBookingDates(startDate, sessionDurationDays) : "—",
     total,
     depositCents,
     balanceCents,
     activityLines,
     extrasLines: getSelectedExtrasDisplay(
       extras,
-      maxDuration,
-      participantCount
+      sessionDurationDays,
+      participantCount,
+      items
     ),
     submittedAt: new Date(booking.created_at).toLocaleString("en-PH", {
       dateStyle: "medium",

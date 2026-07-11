@@ -869,6 +869,22 @@ body {
     0 10px 28px color-mix(in srgb, var(--brand-teal) 10%, transparent);
 }
 
+.booking-extra-card-locked {
+  cursor: default;
+  border-color: color-mix(in srgb, var(--brand-teal) 40%, transparent);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--brand-teal) 8%, var(--input-bg)) 0%,
+    color-mix(in srgb, var(--brand-teal) 3%, var(--input-bg)) 100%
+  );
+}
+
+.booking-extra-card-locked:hover {
+  border-color: color-mix(in srgb, var(--brand-teal) 40%, transparent);
+  box-shadow: none;
+  transform: none;
+}
+
 .booking-extra-card-main {
   display: flex;
   align-items: flex-start;

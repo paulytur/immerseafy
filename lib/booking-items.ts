@@ -15,6 +15,7 @@ import {
   bookingGroupHeadcount,
   extrasFromBookingRecord,
   formatBookingExtrasSummary,
+  resolveSessionDurationDays,
 } from "@/lib/booking-extras";
 
 export type BookingLineItemInput = {
@@ -307,18 +308,20 @@ export async function getBookingEmailContext(
     carpool_requested?: boolean | null;
     room_requested?: boolean | null;
     room_decline_reason?: string | null;
+    trip_duration_days?: 1 | 2 | null;
     session_slots?: { service_slug: string; date: string; price_cents: number } | null;
   }
 ) {
   const items = await fetchBookingItems(supabase, booking.id);
 
   if (items.length > 0) {
-    const maxDuration = Math.max(
-      ...items.map((i) => i.duration_days),
-      1
-    ) as 1 | 2;
     const start = booking.start_date ?? items[0].start_date;
     const extras = extrasFromBookingRecord(booking);
+    const sessionDurationDays = resolveSessionDurationDays(
+      booking.trip_duration_days,
+      items,
+      extras
+    );
     const participantCount = bookingGroupHeadcount(items);
     const coursesTotal = items.reduce(
       (sum, i) => sum + bookingItemLineTotalCents(i),
@@ -337,13 +340,15 @@ export async function getBookingEmailContext(
           startDate: i.start_date,
         }))
       ),
-      date: start ? formatBookingDates(start, maxDuration) : "",
+      date: start ? formatBookingDates(start, sessionDurationDays) : "",
       totalCents:
-        coursesTotal + bookingExtrasTotalCents(extras, maxDuration, participantCount),
+        coursesTotal +
+        bookingExtrasTotalCents(extras, sessionDurationDays, participantCount, items),
       extrasSummary: formatBookingExtrasSummary(
         extras,
-        maxDuration,
-        participantCount
+        sessionDurationDays,
+        participantCount,
+        items
       ),
       items,
     };

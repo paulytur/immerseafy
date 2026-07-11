@@ -151,7 +151,8 @@ export default function BookingSummaryPanel({
   const extrasLines: SummaryLine[] = getSelectedExtrasDisplay(
     extras,
     sessionDurationDays,
-    participantCount
+    participantCount,
+    lineItems
   ).map((line) => ({
     id: line.id,
     label: line.label,

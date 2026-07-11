@@ -1,11 +1,13 @@
 "use client";
 
 import BookingExtrasSelector from "@/components/booking/BookingExtrasSelector";
+import type { CourseLineItem } from "@/components/booking/CourseLineCard";
 import type { BookingExtras } from "@/lib/booking-extras";
 
 type BookingExtrasStepProps = {
   sessionDurationDays: 1 | 2;
   participantCount: number;
+  lineItems: CourseLineItem[];
   value: BookingExtras;
   onChange: (extras: BookingExtras) => void;
 };
@@ -13,6 +15,7 @@ type BookingExtrasStepProps = {
 export default function BookingExtrasStep({
   sessionDurationDays,
   participantCount,
+  lineItems,
   value,
   onChange,
 }: BookingExtrasStepProps) {
@@ -24,14 +27,25 @@ export default function BookingExtrasStep({
           Meals, travel &amp; stay
         </h2>
         <p className="booking-details-section-lead">
-          Choose optional add-ons for your group. Everything here is arranged
-          with the resort and priced per participant.
+          {sessionDurationDays === 1 ? (
+            <>
+              1-day trips include a day tour fee (no overnight room). You can
+              also add optional meals and carpool — all priced per participant.
+            </>
+          ) : (
+            <>
+              Choose optional add-ons for your group. Participants on{" "}
+              <strong className="text-sand">1-day activities only</strong> are
+              charged a day tour fee instead of overnight room.
+            </>
+          )}
         </p>
       </header>
 
       <BookingExtrasSelector
         sessionDurationDays={sessionDurationDays}
         participantCount={participantCount}
+        lineItems={lineItems}
         value={value}
         onChange={onChange}
       />

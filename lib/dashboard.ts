@@ -3,6 +3,7 @@ import {
   bookingExtrasTotalCents,
   bookingParticipantCount,
   extrasFromBookingRecord,
+  resolveSessionDurationDays,
 } from "@/lib/booking-extras";
 import {
   bookingItemLineTotalCents,
@@ -73,9 +74,11 @@ export function bookingTotalCents(booking: BookingWithSlot): number {
   const items = booking.booking_items ?? [];
   const slot = booking.session_slots;
   const extras = extrasFromBookingRecord(booking);
-  const maxDuration = Math.max(...items.map((item) => item.duration_days), 1) as
-    | 1
-    | 2;
+  const sessionDurationDays = resolveSessionDurationDays(
+    booking.trip_duration_days,
+    items,
+    extras
+  );
   const participantCount = bookingParticipantCount(items);
 
   const coursesTotal =
@@ -90,7 +93,7 @@ export function bookingTotalCents(booking: BookingWithSlot): number {
 
   return (
     coursesTotal +
-    bookingExtrasTotalCents(extras, maxDuration, participantCount)
+    bookingExtrasTotalCents(extras, sessionDurationDays, participantCount, items)
   );
 }
 

@@ -86,10 +86,11 @@ export async function getPublicScheduleDates(
     rows as Parameters<typeof groupAvailabilityByDate>[0]
   );
 
-  const upcomingDays = days.filter((day) => day.date >= today);
+  // Bookings must start after today — same-day trips are not offered online.
+  const upcomingDays = days.filter((day) => day.date > today);
   const dates = upcomingDays.map((day) => day.date).sort();
   const twoDayStartDates = groupAvailabilityByTwoDayPeriod(days)
-    .filter((period) => period.endDate >= today)
+    .filter((period) => period.startDate > today)
     .map((period) => period.startDate)
     .sort();
 
