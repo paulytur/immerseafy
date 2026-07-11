@@ -1502,12 +1502,103 @@ body {
 }
 
 .admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 16rem;
+  height: 100%;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: 1.25rem;
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--ocean-mid) 90%, var(--ocean-deep)) 0%,
     var(--ocean-deep) 100%
   );
   border-right: 1px solid var(--card-border);
+}
+
+.admin-shell {
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--ocean-deep);
+}
+
+.admin-mobile-header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 3.5rem;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--ocean-deep) 92%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.admin-mobile-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 0.625rem;
+  border: 1px solid color-mix(in srgb, var(--brand-teal) 18%, transparent);
+  background: color-mix(in srgb, var(--brand-teal) 8%, transparent);
+  color: var(--brand-teal);
+}
+
+.admin-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  border: 0;
+  background: rgb(0 0 0 / 0.55);
+}
+
+.admin-app {
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.admin-app-inner {
+  margin-inline: auto;
+  max-width: 72rem;
+  padding: 1.5rem;
+  padding-top: calc(3.5rem + 1.5rem);
+}
+
+@media (max-width: 767px) {
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    width: min(16rem, 85vw);
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: 12px 0 32px rgb(0 0 0 / 0.25);
+  }
+
+  .admin-sidebar.is-open {
+    transform: translateX(0);
+  }
+}
+
+@media (min-width: 768px) {
+  .admin-app-inner {
+    padding: 2.5rem;
+    padding-top: 2.5rem;
+  }
 }
 
 .admin-nav-link {
@@ -1897,23 +1988,174 @@ body {
 
 .admin-bookings-table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
 }
 
-.admin-bookings-head,
+.admin-bookings-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.admin-booking-total-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+}
+
+.admin-booking-total-sub {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .admin-bookings-table-wrap {
+    overflow-x: visible;
+  }
+
+  .admin-bookings-head {
+    display: none;
+  }
+
+  .admin-booking-row-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.625rem 0.75rem;
+    min-width: 0;
+    padding: 0.75rem;
+    align-items: start;
+  }
+
+  .admin-booking-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .admin-booking-cell[data-label]:not([data-label=""])::before {
+    content: attr(data-label);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .admin-booking-cell.col-status {
+    grid-column: 1;
+    grid-row: 1;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .admin-booking-cell.col-status::before {
+    display: none;
+  }
+
+  .admin-booking-cell.col-guest {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  .admin-booking-cell.col-guest::before {
+    display: none;
+  }
+
+  .admin-booking-cell.col-course {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .admin-booking-cell.col-date {
+    grid-column: 1;
+    grid-row: 4;
+  }
+
+  .admin-booking-cell.col-pax {
+    grid-column: 2;
+    grid-row: 4;
+  }
+
+  .admin-booking-cell.col-total {
+    grid-column: 1;
+    grid-row: 5;
+    align-items: flex-start;
+  }
+
+  .admin-booking-cell.col-ref {
+    grid-column: 2;
+    grid-row: 5;
+    align-self: end;
+  }
+
+  .admin-booking-cell.col-expand {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
+    align-items: center;
+    align-self: center;
+  }
+
+  .admin-booking-cell.col-expand::before {
+    display: none;
+  }
+
+  .admin-booking-cell.col-actions {
+    grid-column: 1 / -1;
+    grid-row: 6;
+    width: 100%;
+  }
+
+  .admin-booking-total-stack {
+    align-items: flex-start;
+  }
+
+  .admin-booking-cell.col-actions .admin-booking-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .admin-booking-expand {
+    padding-inline: 0.75rem;
+  }
+}
+
 .admin-booking-row-grid {
   display: grid;
-  grid-template-columns:
-    5.75rem minmax(5.5rem, 0.85fr) minmax(8rem, 1.15fr) minmax(7rem, 1fr) 5rem
-    4.75rem minmax(6.5rem, 0.9fr) 1.5rem minmax(12.5rem, max-content);
   align-items: center;
   column-gap: 0.625rem;
-  min-width: 62rem;
+}
+
+@media (min-width: 768px) {
+  .admin-bookings-head {
+    display: grid;
+    align-items: center;
+    column-gap: 0.625rem;
+  }
+
+  .admin-bookings-head,
+  .admin-booking-row-grid {
+    grid-template-columns:
+      5.75rem minmax(5.5rem, 0.85fr) minmax(8rem, 1.15fr) minmax(7rem, 1fr) 5rem
+      4.75rem minmax(6.5rem, 0.9fr) 1.5rem minmax(12.5rem, max-content);
+    min-width: 62rem;
+  }
 }
 
 .admin-bookings-head {
   border-bottom: 1px solid var(--card-border);
   padding: 0.375rem 0.875rem;
-  background: transparent;
+  background: var(--card-bg);
 }
 
 .admin-bookings-head-cell {
@@ -2072,11 +2314,6 @@ body {
 
 .admin-booking-chevron {
   color: var(--brand-teal);
-  transition: transform 0.2s;
-}
-
-.admin-booking-chevron.is-open {
-  transform: rotate(180deg);
 }
 
 .admin-booking-btn {
@@ -2575,6 +2812,338 @@ body {
   color: color-mix(in srgb, var(--brand-teal) 75%, white);
 }
 
+.admin-schedule-table-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-schedule-table-wrap,
+.admin-dashboard-trips-table-wrap,
+.admin-deadlines-table-wrap,
+.admin-attention-table-wrap,
+.admin-roster-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-schedule-table-head,
+.admin-schedule-table-row-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(9rem, 1fr) minmax(12rem, 2fr) 4.5rem minmax(8rem, max-content);
+  align-items: center;
+  column-gap: 0.625rem;
+  min-width: 40rem;
+}
+
+.admin-schedule-table-head {
+  border-bottom: 1px solid var(--card-border);
+  padding: 0.375rem 0.875rem;
+}
+
+.admin-schedule-table-head-cell {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-schedule-table-head-cell.col-count,
+.admin-schedule-table-cell.col-count {
+  text-align: center;
+}
+
+.admin-schedule-table-head-cell.col-actions,
+.admin-schedule-table-cell.col-actions {
+  text-align: right;
+}
+
+.admin-schedule-table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-schedule-table-row {
+  border-bottom: 1px solid color-mix(in srgb, var(--card-border) 70%, transparent);
+}
+
+.admin-schedule-table-row:last-child {
+  border-bottom: none;
+}
+
+.admin-schedule-table-row-grid {
+  padding: 0.5rem 0.875rem;
+}
+
+.admin-schedule-table-cell {
+  min-width: 0;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+}
+
+.admin-schedule-table-cell.col-coaches,
+.admin-schedule-table-cell.col-actions {
+  overflow: visible;
+  white-space: normal;
+}
+
+.admin-schedule-table-coaches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.admin-dashboard-trips-head,
+.admin-dashboard-trips-row-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(8rem, 1.1fr) 4.75rem 4.25rem 4.5rem 4.75rem 5.5rem minmax(8rem, 1.4fr)
+    4.5rem;
+  align-items: center;
+  column-gap: 0.625rem;
+  min-width: 52rem;
+}
+
+.admin-dashboard-trips-head {
+  border-bottom: 1px solid var(--card-border);
+  padding: 0.375rem 0.875rem;
+}
+
+.admin-dashboard-trips-head-cell {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-dashboard-trips-head-cell.col-pax,
+.admin-dashboard-trips-cell.col-pax,
+.admin-dashboard-trips-head-cell.col-pending,
+.admin-dashboard-trips-cell.col-pending,
+.admin-dashboard-trips-head-cell.col-awaiting,
+.admin-dashboard-trips-cell.col-awaiting,
+.admin-dashboard-trips-head-cell.col-confirmed,
+.admin-dashboard-trips-cell.col-confirmed {
+  text-align: center;
+}
+
+.admin-dashboard-trips-head-cell.col-deposits,
+.admin-dashboard-trips-cell.col-deposits,
+.admin-dashboard-trips-head-cell.col-actions,
+.admin-dashboard-trips-cell.col-actions {
+  text-align: right;
+}
+
+.admin-dashboard-trips-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-dashboard-trips-row {
+  border-bottom: 1px solid color-mix(in srgb, var(--card-border) 70%, transparent);
+}
+
+.admin-dashboard-trips-row:last-child {
+  border-bottom: none;
+}
+
+.admin-dashboard-trips-row-next {
+  box-shadow: inset 2px 0 0 var(--brand-teal);
+}
+
+.admin-dashboard-trips-row-grid {
+  padding: 0.5rem 0.875rem;
+}
+
+.admin-dashboard-trips-cell {
+  min-width: 0;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+}
+
+.admin-dashboard-trips-cell.col-coaches,
+.admin-dashboard-trips-cell.col-actions {
+  overflow: visible;
+  white-space: normal;
+}
+
+.admin-deadlines-head,
+.admin-deadlines-row-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(6rem, 1fr) minmax(7rem, 1fr) minmax(8rem, 1.1fr) 5.5rem minmax(8rem, 1.2fr)
+    3.5rem;
+  align-items: center;
+  column-gap: 0.625rem;
+  min-width: 44rem;
+}
+
+.admin-deadlines-head {
+  border-bottom: 1px solid var(--card-border);
+  padding: 0.375rem 0.875rem;
+}
+
+.admin-deadlines-head-cell {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-deadlines-head-cell.col-deposit,
+.admin-deadlines-cell.col-deposit,
+.admin-deadlines-head-cell.col-left,
+.admin-deadlines-cell.col-left {
+  text-align: right;
+}
+
+.admin-deadlines-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-deadlines-row {
+  border-bottom: 1px solid color-mix(in srgb, var(--card-border) 70%, transparent);
+}
+
+.admin-deadlines-row:last-child {
+  border-bottom: none;
+}
+
+.admin-deadlines-row-grid {
+  padding: 0.5rem 0.875rem;
+}
+
+.admin-deadlines-cell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+}
+
+.admin-attention-head,
+.admin-attention-row-grid {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) minmax(10rem, 2fr) 5.5rem;
+  align-items: center;
+  column-gap: 0.625rem;
+  min-width: 32rem;
+}
+
+.admin-attention-head {
+  border-bottom: 1px solid var(--card-border);
+  padding: 0.375rem 0.875rem;
+}
+
+.admin-attention-head-cell {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-attention-head-cell.col-actions,
+.admin-attention-cell.col-actions {
+  text-align: right;
+}
+
+.admin-attention-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-attention-row {
+  display: block;
+  border-bottom: 1px solid color-mix(in srgb, var(--card-border) 70%, transparent);
+  transition: background 0.15s;
+}
+
+.admin-attention-row:last-child {
+  border-bottom: none;
+}
+
+.admin-attention-row:hover {
+  background: color-mix(in srgb, var(--brand-teal) 5%, transparent);
+}
+
+.admin-attention-row-grid {
+  padding: 0.625rem 0.875rem;
+}
+
+.admin-attention-cell {
+  min-width: 0;
+  font-size: 0.75rem;
+}
+
+.admin-attention-row-amber {
+  box-shadow: inset 2px 0 0 #f59e0b;
+}
+
+.admin-attention-row-rose {
+  box-shadow: inset 2px 0 0 #f43f5e;
+}
+
+.admin-attention-row-teal {
+  box-shadow: inset 2px 0 0 var(--brand-teal);
+}
+
+.admin-roster-head,
+.admin-roster-row-grid {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1.5fr) 6.5rem;
+  align-items: center;
+  column-gap: 0.625rem;
+}
+
+.admin-roster-head {
+  border-bottom: 1px solid var(--card-border);
+  padding: 0.375rem 0;
+}
+
+.admin-roster-head-cell {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-roster-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-roster-row {
+  border-bottom: 1px solid color-mix(in srgb, var(--card-border) 55%, transparent);
+}
+
+.admin-roster-row:last-child {
+  border-bottom: none;
+}
+
+.admin-roster-row-grid {
+  padding: 0.4375rem 0;
+}
+
+.admin-roster-cell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
 .admin-schedule-month {
   overflow: hidden;
   border-radius: 0.875rem;
@@ -2770,6 +3339,7 @@ body {
     1.25rem;
   align-items: center;
   column-gap: 0.75rem;
+  min-width: 44rem;
 }
 
 .admin-team-accounts-head-cell.col-role,
@@ -2870,11 +3440,9 @@ body {
 
 .admin-team-account-chevron {
   color: var(--text-muted);
-  transition: transform 0.15s, color 0.15s;
 }
 
 .admin-team-account-chevron.is-open {
-  transform: rotate(180deg);
   color: var(--brand-teal);
 }
 

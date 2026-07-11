@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Sparkles, Users } from "lucide-react";
+import { ArrowRight, CalendarDays } from "lucide-react";
 import { formatPrice } from "@/lib/services-catalog";
 import type { DashboardTrip } from "@/lib/dashboard";
-import StatusBadge from "@/components/admin/StatusBadge";
 
 function coachInitials(name: string) {
   return name
@@ -13,154 +12,107 @@ function coachInitials(name: string) {
     .toUpperCase();
 }
 
-function TripCard({
-  trip,
-  featured = false,
-}: {
-  trip: DashboardTrip;
-  featured?: boolean;
-}) {
+const TABLE_COLUMNS = [
+  { key: "date", label: "Date", className: "col-date" },
+  { key: "pax", label: "Guests", className: "col-pax" },
+  { key: "pending", label: "Pending", className: "col-pending" },
+  { key: "awaiting", label: "Awaiting", className: "col-awaiting" },
+  { key: "confirmed", label: "Confirmed", className: "col-confirmed" },
+  { key: "deposits", label: "Deposits", className: "col-deposits" },
+  { key: "coaches", label: "Coaches", className: "col-coaches" },
+  { key: "actions", label: "", className: "col-actions" },
+] as const;
+
+function TripsTableHeader() {
+  return (
+    <div className="admin-dashboard-trips-head" role="row">
+      {TABLE_COLUMNS.map((column) => (
+        <span
+          key={column.key}
+          className={`admin-dashboard-trips-head-cell ${column.className}`}
+        >
+          {column.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function TripRow({ trip, featured = false }: { trip: DashboardTrip; featured?: boolean }) {
   return (
     <article
-      className={`admin-dashboard-trip-card${featured ? " admin-dashboard-trip-card-next" : ""}`}
+      className={`admin-dashboard-trips-row${featured ? " admin-dashboard-trips-row-next" : ""}`}
     >
-      <div className="admin-dashboard-trip-head">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-display text-base font-semibold text-sand">
-              {trip.dateLabel}
-            </p>
-            {featured ? (
-              <span className="admin-dashboard-trip-next-pill">
-                <Sparkles size={12} />
-                Next up
-              </span>
-            ) : null}
-          </div>
-          <p className="mt-0.5 text-xs text-sand-muted">
-            {trip.totalPax > 0
-              ? `${trip.bookings.length} booking${trip.bookings.length === 1 ? "" : "s"} on this date`
-              : "No bookings yet"}
-          </p>
+      <div className="admin-dashboard-trips-row-grid" role="row">
+        <div className="admin-dashboard-trips-cell col-date">
+          <span className="admin-booking-highlight">{trip.dateLabel}</span>
+          {featured ? (
+            <span className="admin-dashboard-trip-next-pill mt-1">Next up</span>
+          ) : null}
         </div>
 
-        <div className="flex flex-col items-end gap-1.5">
-          {trip.totalPax > 0 ? (
-            <span className="admin-dashboard-pax-highlight">
-              {trip.totalPax} participant{trip.totalPax === 1 ? "" : "s"}
-            </span>
-          ) : null}
-          {trip.needsCoaches ? (
+        <div className="admin-dashboard-trips-cell col-pax">
+          <span className="admin-booking-highlight-pill">
+            {trip.totalPax} guest{trip.totalPax === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        <div className="admin-dashboard-trips-cell col-pending">
+          {trip.pendingCount > 0 ? trip.pendingCount : "—"}
+        </div>
+
+        <div className="admin-dashboard-trips-cell col-awaiting">
+          {trip.awaitingCount > 0 ? trip.awaitingCount : "—"}
+        </div>
+
+        <div className="admin-dashboard-trips-cell col-confirmed">
+          {trip.confirmedCount > 0 ? trip.confirmedCount : "—"}
+        </div>
+
+        <div className="admin-dashboard-trips-cell col-deposits">
+          {trip.confirmedRevenueCents > 0
+            ? formatPrice(trip.confirmedRevenueCents)
+            : "—"}
+        </div>
+
+        <div className="admin-dashboard-trips-cell col-coaches">
+          {trip.coaches.length === 0 ? (
             <Link
               href="/admin/schedule"
-              className="admin-dashboard-trip-warning hover:underline"
+              className="admin-dashboard-trip-warning text-xs hover:underline"
             >
-              No coaches
+              None
             </Link>
-          ) : null}
+          ) : (
+            <div className="admin-schedule-table-coaches">
+              {trip.coaches.slice(0, 4).map((coach) => (
+                <span key={coach.id} className="admin-coach-chip" title={coach.name}>
+                  <span className="admin-coach-chip-initials">
+                    {coachInitials(coach.name)}
+                  </span>
+                  <span className="admin-coach-chip-name">
+                    {coach.name.split(" ")[0]}
+                  </span>
+                </span>
+              ))}
+              {trip.coaches.length > 4 ? (
+                <span className="text-xs text-sand-muted">
+                  +{trip.coaches.length - 4}
+                </span>
+              ) : null}
+            </div>
+          )}
+        </div>
+
+        <div className="admin-dashboard-trips-cell col-actions">
+          <Link
+            href="/admin/bookings"
+            className="admin-booking-btn admin-booking-btn-primary"
+          >
+            View
+          </Link>
         </div>
       </div>
-
-      <div className="admin-dashboard-trip-stats">
-        {trip.pendingCount > 0 ? (
-          <span className="admin-dashboard-trip-stat">
-            {trip.pendingCount} pending
-          </span>
-        ) : null}
-        {trip.awaitingCount > 0 ? (
-          <span className="admin-dashboard-trip-stat">
-            {trip.awaitingCount} awaiting
-          </span>
-        ) : null}
-        {trip.confirmedCount > 0 ? (
-          <span className="admin-dashboard-trip-stat admin-dashboard-trip-stat-confirmed">
-            {trip.confirmedCount} confirmed
-          </span>
-        ) : null}
-        {trip.confirmedRevenueCents > 0 ? (
-          <span className="admin-dashboard-trip-stat">
-            {formatPrice(trip.confirmedRevenueCents)} confirmed
-          </span>
-        ) : null}
-      </div>
-
-      <div className="admin-dashboard-trip-coaches">
-        <div className="flex items-center gap-1.5 text-xs text-sand-muted">
-          <Users size={13} className="text-teal" />
-          Coaches
-        </div>
-        {trip.coaches.length === 0 ? (
-          <p className="text-xs text-sand-muted">None marked yet</p>
-        ) : (
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {trip.coaches.slice(0, featured ? 6 : 4).map((coach) => (
-              <span
-                key={coach.id}
-                className="admin-coach-chip"
-                title={coach.name}
-              >
-                <span className="admin-coach-chip-initials">
-                  {coachInitials(coach.name)}
-                </span>
-                <span className="admin-coach-chip-name">
-                  {coach.name.split(" ")[0]}
-                </span>
-              </span>
-            ))}
-            {trip.coaches.length > (featured ? 6 : 4) ? (
-              <span className="text-xs text-sand-muted">
-                +{trip.coaches.length - (featured ? 6 : 4)} more
-              </span>
-            ) : null}
-          </div>
-        )}
-      </div>
-
-      {trip.bookings.length > 0 ? (
-        <ul className="admin-dashboard-trip-bookings">
-          {trip.bookings.slice(0, featured ? 5 : 3).map((booking) => (
-            <li key={booking.id} className="admin-dashboard-trip-booking">
-              <Link
-                href="/admin/bookings"
-                className="min-w-0 flex-1 transition-colors hover:text-teal"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate text-sm font-medium text-sand">
-                    {booking.customerName}
-                  </p>
-                  <StatusBadge status={booking.status} compact />
-                </div>
-                <p className="mt-0.5 truncate text-xs text-sand-muted">
-                  {booking.summary}
-                </p>
-                {booking.participants.length > 0 ? (
-                  <p className="admin-dashboard-participants">
-                    {booking.participants.join(" · ")}
-                  </p>
-                ) : (
-                  <p className="admin-dashboard-participants admin-dashboard-participants-fallback">
-                    {booking.headcount} participant
-                    {booking.headcount === 1 ? "" : "s"}
-                  </p>
-                )}
-                <p className="mt-0.5 font-mono text-[0.65rem] text-teal/70">
-                  {booking.reference}
-                </p>
-              </Link>
-              <span className="admin-dashboard-booking-pax">
-                {booking.headcount} pax
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      {trip.bookings.length > (featured ? 5 : 3) ? (
-        <p className="text-xs text-sand-muted">
-          +{trip.bookings.length - (featured ? 5 : 3)} more booking
-          {trip.bookings.length - (featured ? 5 : 3) === 1 ? "" : "s"}
-        </p>
-      ) : null}
     </article>
   );
 }
@@ -197,8 +149,6 @@ export default function DashboardUpcomingTrips({
     );
   }
 
-  const [nextTrip, ...moreTrips] = trips;
-
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -207,7 +157,7 @@ export default function DashboardUpcomingTrips({
             Upcoming trips
           </h2>
           <p className="text-sm text-sand-muted">
-            Next dates with schedule, bookings, or both.
+            Schedule blocks with booking activity.
           </p>
         </div>
         <Link
@@ -218,15 +168,16 @@ export default function DashboardUpcomingTrips({
         </Link>
       </div>
 
-      {nextTrip ? <TripCard trip={nextTrip} featured /> : null}
-
-      {moreTrips.length > 0 ? (
-        <div className="admin-dashboard-trip-grid">
-          {moreTrips.map((trip) => (
-            <TripCard key={trip.startDate} trip={trip} />
-          ))}
+      <section className="admin-bookings-panel">
+        <div className="admin-dashboard-trips-table-wrap">
+          <TripsTableHeader />
+          <div className="admin-dashboard-trips-body">
+            {trips.map((trip, index) => (
+              <TripRow key={trip.startDate} trip={trip} featured={index === 0} />
+            ))}
+          </div>
         </div>
-      ) : null}
+      </section>
     </section>
   );
 }

@@ -3,6 +3,7 @@
 import { useMemo, useState, type MouseEvent } from "react";
 import {
   ChevronDown,
+  ChevronUp,
   ClipboardList,
   Copy,
   FileDown,
@@ -339,35 +340,49 @@ function BookingRow({
         }}
         tabIndex={0}
       >
-        <div className="admin-booking-cell col-status">
+        <div className="admin-booking-cell col-status" data-label="Status">
           <StatusBadge status={booking.status} compact />
         </div>
-        <div className="admin-booking-cell col-guest">{booking.customer_name}</div>
-        <div className="admin-booking-cell col-course">
+        <div className="admin-booking-cell col-guest" data-label="Guest">
+          {booking.customer_name}
+        </div>
+        <div className="admin-booking-cell col-course" data-label="Course">
           <span className="admin-booking-highlight" title={details.courseLabel}>
             {details.courseLabel}
           </span>
         </div>
-        <div className="admin-booking-cell col-date">
+        <div className="admin-booking-cell col-date" data-label="Date">
           <span className="admin-booking-highlight">{details.dateLabel}</span>
         </div>
-        <div className="admin-booking-cell col-pax">
+        <div className="admin-booking-cell col-pax" data-label="Guests">
           <span className="admin-booking-highlight-pill">
             {details.guestCount}{" "}
             {details.guestCount === 1 ? "guest" : "guests"}
           </span>
         </div>
-        <div className="admin-booking-cell col-total">
-          {formatPrice(details.total)}
+        <div className="admin-booking-cell col-total" data-label="Total">
+          {booking.status === "awaiting_payment" ? (
+            <span className="admin-booking-total-stack">
+              <span>{formatPrice(details.total)}</span>
+              <span className="admin-booking-total-sub">
+                Deposit {formatPrice(details.depositCents)}
+              </span>
+            </span>
+          ) : (
+            formatPrice(details.total)
+          )}
         </div>
-        <div className="admin-booking-cell col-ref">{booking.reference}</div>
-        <div className="admin-booking-cell col-expand">
-          <ChevronDown
-            size={14}
-            className={`admin-booking-chevron ${expanded ? "is-open" : ""}`}
-          />
+        <div className="admin-booking-cell col-ref" data-label="Reference">
+          {booking.reference}
         </div>
-        <div className="admin-booking-cell col-actions">
+        <div className="admin-booking-cell col-expand" data-label="">
+          {expanded ? (
+            <ChevronUp size={14} className="admin-booking-chevron" />
+          ) : (
+            <ChevronDown size={14} className="admin-booking-chevron" />
+          )}
+        </div>
+        <div className="admin-booking-cell col-actions" data-label="Actions">
           <div className="admin-booking-actions">
             <BookingRowActions booking={booking} busy={busy} onAction={onAction} />
           </div>

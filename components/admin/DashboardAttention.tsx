@@ -3,10 +3,9 @@ import { AlertTriangle, ArrowRight, CheckCircle2 } from "lucide-react";
 import type { DashboardAlert } from "@/lib/dashboard";
 
 const toneStyles = {
-  amber:
-    "border-amber-500/25 bg-amber-500/10 text-amber-900 dark:text-amber-100",
-  rose: "border-rose-500/25 bg-rose-500/10 text-rose-900 dark:text-rose-100",
-  teal: "border-teal/25 bg-teal/10 text-sand",
+  amber: "admin-attention-row-amber",
+  rose: "admin-attention-row-rose",
+  teal: "admin-attention-row-teal",
 };
 
 export default function DashboardAttention({ alerts }: { alerts: DashboardAlert[] }) {
@@ -39,21 +38,40 @@ export default function DashboardAttention({ alerts }: { alerts: DashboardAlert[
         </h2>
       </div>
 
-      <div className="admin-dashboard-alert-grid">
-        {alerts.map((alert) => (
-          <Link
-            key={alert.id}
-            href={alert.href}
-            className={`admin-dashboard-alert ${toneStyles[alert.tone]}`}
-          >
-            <div className="min-w-0">
-              <p className="font-medium">{alert.title}</p>
-              <p className="mt-1 text-sm opacity-80">{alert.description}</p>
-            </div>
-            <ArrowRight size={16} className="shrink-0 opacity-70" />
-          </Link>
-        ))}
-      </div>
+      <section className="admin-bookings-panel">
+        <div className="admin-attention-table-wrap">
+          <div className="admin-attention-head" role="row">
+            <span className="admin-attention-head-cell col-issue">Issue</span>
+            <span className="admin-attention-head-cell col-detail">Details</span>
+            <span className="admin-attention-head-cell col-actions">Action</span>
+          </div>
+
+          <div className="admin-attention-body">
+            {alerts.map((alert) => (
+              <Link
+                key={alert.id}
+                href={alert.href}
+                className={`admin-attention-row ${toneStyles[alert.tone]}`}
+              >
+                <div className="admin-attention-row-grid" role="row">
+                  <div className="admin-attention-cell col-issue">
+                    <p className="font-medium text-sand">{alert.title}</p>
+                  </div>
+                  <div className="admin-attention-cell col-detail">
+                    <p className="text-sm text-sand-muted">{alert.description}</p>
+                  </div>
+                  <div className="admin-attention-cell col-actions">
+                    <span className="admin-booking-btn admin-booking-btn-primary">
+                      Open
+                      <ArrowRight size={12} />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
     </section>
   );
 }

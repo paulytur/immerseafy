@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown } from "lucide-react";
 import AdminSearch from "@/components/admin/AdminSearch";
 import type { Coach } from "@/lib/coaches";
 
@@ -9,8 +8,12 @@ type CoachOption = Coach & {
   linkedUser?: { full_name: string | null; email: string } | null;
 };
 
-const COLLAPSE_THRESHOLD = 6;
 const SEARCH_THRESHOLD = 8;
+
+const TABLE_COLUMNS = [
+  { key: "name", label: "Coach", className: "col-name" },
+  { key: "login", label: "Login", className: "col-login" },
+] as const;
 
 function coachInitials(name: string) {
   return name
@@ -21,18 +24,6 @@ function coachInitials(name: string) {
     .toUpperCase();
 }
 
-function CoachChip({ coach }: { coach: CoachOption }) {
-  return (
-    <span className="admin-coach-chip" title={coach.name}>
-      <span className="admin-coach-chip-initials">{coachInitials(coach.name)}</span>
-      <span className="admin-coach-chip-name">{coach.name}</span>
-      {!coach.profile_id ? (
-        <span className="text-[0.625rem] text-sand-muted">· no login</span>
-      ) : null}
-    </span>
-  );
-}
-
 export default function CoachRosterPanel({
   coaches,
   expandSignal,
@@ -40,7 +31,7 @@ export default function CoachRosterPanel({
   coaches: CoachOption[];
   expandSignal?: string | null;
 }) {
-  const [expanded, setExpanded] = useState(coaches.length <= COLLAPSE_THRESHOLD);
+  const [expanded, setExpanded] = useState(true);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -62,7 +53,7 @@ export default function CoachRosterPanel({
   if (coaches.length === 0) return null;
 
   return (
-    <div className="admin-coach-roster">
+    <div className="admin-coach-roster mt-5">
       <button
         type="button"
         onClick={() => setExpanded((current) => !current)}
@@ -74,17 +65,12 @@ export default function CoachRosterPanel({
           <p className="mt-0.5 text-xs text-sand-muted">
             {coaches.length} on schedule
             {withoutLogin > 0 ? ` · ${withoutLogin} without login` : ""}
-            {!expanded ? " · tap to browse" : ""}
           </p>
         </div>
-        <ChevronDown
-          size={16}
-          className={`shrink-0 text-teal transition-transform ${expanded ? "rotate-180" : ""}`}
-        />
       </button>
 
       {expanded ? (
-        <div className="admin-coach-roster-body">
+        <div className="admin-coach-roster-body space-y-3">
           {coaches.length >= SEARCH_THRESHOLD ? (
             <AdminSearch
               value={query}
@@ -96,10 +82,43 @@ export default function CoachRosterPanel({
           {filteredCoaches.length === 0 ? (
             <p className="admin-coach-roster-empty">No coaches match your search.</p>
           ) : (
-            <div className="admin-coach-roster-scroll">
-              <div className="admin-coach-roster-chips">
+            <div className="admin-roster-table-wrap">
+              <div className="admin-roster-head" role="row">
+                {TABLE_COLUMNS.map((column) => (
+                  <span
+                    key={column.key}
+                    className={`admin-roster-head-cell ${column.className}`}
+                  >
+                    {column.label}
+                  </span>
+                ))}
+              </div>
+
+              <div className="admin-roster-body">
                 {filteredCoaches.map((coach) => (
-                  <CoachChip key={coach.id} coach={coach} />
+                  <article key={coach.id} className="admin-roster-row">
+                    <div className="admin-roster-row-grid" role="row">
+                      <div className="admin-roster-cell col-name">
+                        <span className="admin-coach-chip-initials">
+                          {coachInitials(coach.name)}
+                        </span>
+                        <span className="truncate font-medium text-sand">
+                          {coach.name}
+                        </span>
+                      </div>
+                      <div className="admin-roster-cell col-login">
+                        {coach.profile_id ? (
+                          <span className="admin-team-account-link-pill admin-team-account-link-pill-admin">
+                            Linked
+                          </span>
+                        ) : (
+                          <span className="admin-team-account-link-pill admin-team-account-link-pill-warning">
+                            No login
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </article>
                 ))}
               </div>
             </div>

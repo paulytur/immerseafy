@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   Calendar,
   ClipboardList,
   ExternalLink,
   LayoutDashboard,
   LogOut,
+  Menu,
   Settings,
   Users,
+  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { UserRole } from "@/lib/types";
@@ -35,6 +38,18 @@ export default function AdminShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -60,16 +75,56 @@ export default function AdminShell({
     .toUpperCase();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-ocean-deep">
-      <aside className="admin-sidebar flex h-full w-64 shrink-0 flex-col overflow-y-auto p-5">
-        <div className="border-b border-teal/10 pb-5">
-          <Link
-            href="/admin"
-            className="font-display text-sm font-bold tracking-wide text-teal uppercase"
-          >
+    <div className="admin-shell">
+      <header className="admin-mobile-header md:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileOpen((open) => !open)}
+          className="admin-mobile-menu-btn"
+          aria-expanded={mobileOpen}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+        >
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+        <div className="min-w-0">
+          <p className="truncate font-display text-sm font-bold tracking-wide text-teal uppercase">
             Immerseafy
-          </Link>
-          <p className="mt-1 text-xs text-sand-muted">Admin dashboard</p>
+          </p>
+          <p className="truncate text-xs text-sand-muted">Admin dashboard</p>
+        </div>
+      </header>
+
+      {mobileOpen ? (
+        <button
+          type="button"
+          className="admin-sidebar-backdrop md:hidden"
+          aria-label="Close menu"
+          onClick={() => setMobileOpen(false)}
+        />
+      ) : null}
+
+      <aside className={`admin-sidebar${mobileOpen ? " is-open" : ""}`}>
+        <div className="border-b border-teal/10 pb-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <Link
+                href="/admin"
+                className="font-display text-sm font-bold tracking-wide text-teal uppercase"
+                onClick={() => setMobileOpen(false)}
+              >
+                Immerseafy
+              </Link>
+              <p className="mt-1 text-xs text-sand-muted">Admin dashboard</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              className="admin-mobile-menu-btn md:hidden"
+              aria-label="Close menu"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <nav className="mt-6 flex-1 space-y-1">
@@ -79,6 +134,7 @@ export default function AdminShell({
               href={href}
               data-active={isActive(href, exact)}
               className="admin-nav-link"
+              onClick={() => setMobileOpen(false)}
             >
               <Icon size={18} strokeWidth={1.75} />
               {label}
@@ -101,6 +157,7 @@ export default function AdminShell({
             href="/"
             target="_blank"
             className="admin-nav-link text-xs"
+            onClick={() => setMobileOpen(false)}
           >
             <ExternalLink size={16} />
             View website
@@ -119,8 +176,8 @@ export default function AdminShell({
         </div>
       </aside>
 
-      <main className="admin-app min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl p-6 md:p-10">{children}</div>
+      <main className="admin-app">
+        <div className="admin-app-inner">{children}</div>
       </main>
     </div>
   );

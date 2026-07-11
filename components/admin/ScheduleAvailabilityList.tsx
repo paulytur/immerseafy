@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { X } from "lucide-react";
 import {
   comparePeriodsByNearestDate,
   formatBookingDates,
@@ -24,7 +24,14 @@ type ScheduleAvailabilityListProps = {
   coachFilterId?: string;
 };
 
-const INITIAL_MONTH_ROWS = 6;
+const INITIAL_MONTH_ROWS = 8;
+
+const TABLE_COLUMNS = [
+  { key: "dates", label: "Dates", className: "col-dates" },
+  { key: "coaches", label: "Coaches", className: "col-coaches" },
+  { key: "count", label: "Count", className: "col-count" },
+  { key: "actions", label: "Actions", className: "col-actions" },
+] as const;
 
 function coachInitials(name: string) {
   return name
@@ -60,6 +67,97 @@ function matchesSearch(period: CoachTwoDayPeriod, query: string) {
     .toLowerCase();
 
   return haystack.includes(query);
+}
+
+function ScheduleTableHeader() {
+  return (
+    <div className="admin-schedule-table-head" role="row">
+      {TABLE_COLUMNS.map((column) => (
+        <span
+          key={column.key}
+          className={`admin-schedule-table-head-cell ${column.className}`}
+        >
+          {column.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function ScheduleRow({
+  period,
+  isAdmin,
+  myCoach,
+  acting,
+  onRemove,
+}: {
+  period: CoachTwoDayPeriod;
+  isAdmin: boolean;
+  myCoach: Coach | null;
+  acting: string | null;
+  onRemove: (coachId: string, startDate: string) => void;
+}) {
+  const removableCoaches = period.coaches.filter(
+    (coach) => isAdmin || (myCoach && myCoach.id === coach.id)
+  );
+
+  return (
+    <article className="admin-schedule-table-row">
+      <div className="admin-schedule-table-row-grid" role="row">
+        <div className="admin-schedule-table-cell col-dates">
+          <span className="admin-booking-highlight">
+            {formatBookingDates(period.startDate, 2)}
+          </span>
+        </div>
+
+        <div className="admin-schedule-table-cell col-coaches">
+          <div className="admin-schedule-table-coaches">
+            {period.coaches.map((coach) => (
+              <span key={coach.id} className="admin-coach-chip" title={coach.name}>
+                <span className="admin-coach-chip-initials">
+                  {coachInitials(coach.name)}
+                </span>
+                <span className="admin-coach-chip-name">
+                  {coach.name.split(" ")[0]}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="admin-schedule-table-cell col-count">
+          <span className="admin-booking-highlight-pill">
+            {period.coaches.length}
+          </span>
+        </div>
+
+        <div className="admin-schedule-table-cell col-actions">
+          {removableCoaches.length > 0 ? (
+            <div className="admin-booking-actions">
+              {removableCoaches.map((coach) => {
+                const busy = acting === `${coach.id}-${period.startDate}`;
+
+                return (
+                  <button
+                    key={coach.id}
+                    type="button"
+                    disabled={busy}
+                    aria-label={`Remove ${coach.name} from ${formatBookingDates(period.startDate, 2)}`}
+                    onClick={() => onRemove(coach.id, period.startDate)}
+                    className="admin-booking-btn"
+                  >
+                    {busy ? "…" : `Remove ${coach.name.split(" ")[0]}`}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <span className="admin-booking-actions-empty">—</span>
+          )}
+        </div>
+      </div>
+    </article>
+  );
 }
 
 export default function ScheduleAvailabilityList({
@@ -118,41 +216,11 @@ export default function ScheduleAvailabilityList({
       );
   }, [filteredPeriods, today]);
 
-  const currentMonthKey = monthKey(today);
-  const [expanded, setExpanded] = useState<Set<string>>(
-    () => new Set([currentMonthKey])
-  );
   const [monthLimits, setMonthLimits] = useState<Record<string, number>>({});
 
   useEffect(() => {
     setMonthLimits({});
-    const groupKeys = groups.map((group) => group.key);
-
-    if (view === "past") {
-      setExpanded(new Set(groupKeys.slice(0, 1)));
-      return;
-    }
-
-    const defaultKeys = groupKeys.filter((key) => key === currentMonthKey);
-    setExpanded(new Set(defaultKeys.length > 0 ? defaultKeys : groupKeys.slice(0, 1)));
-  }, [view, coachFilterId, query, currentMonthKey, groups]);
-
-  function toggleMonth(key: string) {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
-
-  function expandAll() {
-    setExpanded(new Set(groups.map((group) => group.key)));
-  }
-
-  function collapseAll() {
-    setExpanded(new Set());
-  }
+  }, [view, coachFilterId, query]);
 
   function showMoreInMonth(key: string, total: number) {
     setMonthLimits((prev) => ({
@@ -175,127 +243,58 @@ export default function ScheduleAvailabilityList({
     );
   }
 
-  const allExpanded = groups.every((group) => expanded.has(group.key));
-
   return (
-    <div className="space-y-3">
-      {groups.length > 1 && (
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={allExpanded ? collapseAll : expandAll}
-            className="admin-schedule-list-action"
+    <div className="admin-schedule-table-list">
+      {groups.map((group) => {
+        const visibleLimit = monthLimits[group.key] ?? INITIAL_MONTH_ROWS;
+        const visiblePeriods = group.periods.slice(0, visibleLimit);
+        const hiddenCount = group.periods.length - visiblePeriods.length;
+
+        return (
+          <section
+            key={group.key}
+            className="admin-schedule-month admin-bookings-panel"
           >
-            {allExpanded ? "Collapse all" : "Expand all"}
-          </button>
-        </div>
-      )}
+            <div className="admin-bookings-month-head">
+              <p className="admin-bookings-month-title">{group.label}</p>
+              <p className="admin-bookings-month-meta">
+                {group.periods.length} block
+                {group.periods.length === 1 ? "" : "s"} · {group.coachCount}{" "}
+                coach{group.coachCount === 1 ? "" : "es"}
+              </p>
+            </div>
 
-      <div className="admin-schedule-list">
-        {groups.map((group) => {
-          const isOpen = expanded.has(group.key);
-          const visibleLimit = monthLimits[group.key] ?? INITIAL_MONTH_ROWS;
-          const visiblePeriods = group.periods.slice(0, visibleLimit);
-          const hiddenCount = group.periods.length - visiblePeriods.length;
+            <div className="admin-schedule-table-wrap">
+              <ScheduleTableHeader />
+              <div className="admin-schedule-table-body">
+                {visiblePeriods.map((period) => (
+                  <ScheduleRow
+                    key={period.startDate}
+                    period={period}
+                    isAdmin={isAdmin}
+                    myCoach={myCoach}
+                    acting={acting}
+                    onRemove={onRemove}
+                  />
+                ))}
+              </div>
+            </div>
 
-          return (
-            <section key={group.key} className="admin-schedule-month">
-              <button
-                type="button"
-                onClick={() => toggleMonth(group.key)}
-                className="admin-schedule-month-header"
-                aria-expanded={isOpen}
-              >
-                <div className="min-w-0 text-left">
-                  <p className="font-display text-sm font-semibold text-sand">
-                    {group.label}
-                  </p>
-                  <p className="text-xs text-sand-muted">
-                    {group.periods.length} block
-                    {group.periods.length === 1 ? "" : "s"} · {group.coachCount}{" "}
-                    coach{group.coachCount === 1 ? "" : "es"}
-                  </p>
-                </div>
-                <ChevronDown
-                  size={16}
-                  className={`shrink-0 text-teal transition-transform ${isOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-
-              {isOpen && (
-                <>
-                  <ul className="admin-schedule-rows">
-                    {visiblePeriods.map((period) => (
-                      <li key={period.startDate} className="admin-schedule-row">
-                        <div className="admin-schedule-row-date">
-                          <p className="font-medium text-sand">
-                            {formatBookingDates(period.startDate, 2)}
-                          </p>
-                          <p className="text-xs text-sand-muted">
-                            {period.coaches.length} on deck
-                          </p>
-                        </div>
-
-                        <div className="admin-schedule-row-coaches">
-                          {period.coaches.map((coach) => {
-                            const canRemove =
-                              isAdmin || (myCoach && myCoach.id === coach.id);
-                            const busy =
-                              acting === `${coach.id}-${period.startDate}`;
-
-                            return (
-                              <span
-                                key={coach.id}
-                                className="admin-coach-chip"
-                                title={coach.name}
-                              >
-                                <span className="admin-coach-chip-initials">
-                                  {coachInitials(coach.name)}
-                                </span>
-                                <span className="admin-coach-chip-name">
-                                  {coach.name.split(" ")[0]}
-                                </span>
-                                {canRemove && (
-                                  <button
-                                    type="button"
-                                    disabled={busy}
-                                    aria-label={`Remove ${coach.name} from ${formatBookingDates(period.startDate, 2)}`}
-                                    onClick={() =>
-                                      onRemove(coach.id, period.startDate)
-                                    }
-                                    className="admin-coach-chip-remove"
-                                  >
-                                    <X size={12} />
-                                  </button>
-                                )}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {hiddenCount > 0 && (
-                    <div className="admin-schedule-show-more-wrap">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          showMoreInMonth(group.key, group.periods.length)
-                        }
-                        className="admin-schedule-show-more"
-                      >
-                        Show {Math.min(hiddenCount, INITIAL_MONTH_ROWS)} more in{" "}
-                        {group.label.split(" ")[0]}
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </section>
-          );
-        })}
-      </div>
+            {hiddenCount > 0 ? (
+              <div className="admin-schedule-show-more-wrap">
+                <button
+                  type="button"
+                  onClick={() => showMoreInMonth(group.key, group.periods.length)}
+                  className="admin-schedule-show-more"
+                >
+                  Show {Math.min(hiddenCount, INITIAL_MONTH_ROWS)} more in{" "}
+                  {group.label.split(" ")[0]}
+                </button>
+              </div>
+            ) : null}
+          </section>
+        );
+      })}
     </div>
   );
 }

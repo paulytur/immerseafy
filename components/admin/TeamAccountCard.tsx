@@ -4,6 +4,7 @@ import {
   AlertCircle,
   CheckCircle2,
   ChevronDown,
+  ChevronUp,
   KeyRound,
   Shield,
 } from "lucide-react";
@@ -140,10 +141,11 @@ export default function TeamAccountCard({
         </div>
 
         <div className="admin-team-account-cell col-expand">
-          <ChevronDown
-            size={14}
-            className={`admin-team-account-chevron ${expanded ? "is-open" : ""}`}
-          />
+          {expanded ? (
+            <ChevronUp size={14} className="admin-team-account-chevron is-open" />
+          ) : (
+            <ChevronDown size={14} className="admin-team-account-chevron" />
+          )}
         </div>
       </div>
 
